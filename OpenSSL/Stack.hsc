@@ -16,7 +16,7 @@ import           Foreign.C
 data STACK
 
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 foreign import ccall unsafe "OPENSSL_sk_new_null"
         skNewNull :: IO (Ptr STACK)
 

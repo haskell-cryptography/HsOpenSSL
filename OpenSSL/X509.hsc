@@ -119,7 +119,7 @@ foreign import ccall unsafe "HsOpenSSL_X509_get_notBefore"
 foreign import ccall unsafe "HsOpenSSL_X509_get_notAfter"
         _get_notAfter :: Ptr X509_ -> IO (Ptr ASN1_TIME)
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 foreign import ccall unsafe "X509_set1_notBefore"
         _set_notBefore :: Ptr X509_ -> Ptr ASN1_TIME -> IO CInt
 

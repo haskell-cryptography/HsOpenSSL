@@ -41,7 +41,7 @@ module OpenSSL.X509.Revocation
     where
 #include "HsOpenSSL.h"
 import Control.Monad
-#if OPENSSL_VERSION_NUMBER < 0x10000000
+#if (defined(OPENBSD) || OPENSSL_VERSION_NUMBER < 0x10000000)
 import Data.List
 #endif
 import Data.Time.Clock
@@ -103,7 +103,7 @@ foreign import ccall unsafe "HsOpenSSL_X509_CRL_get_lastUpdate"
 foreign import ccall unsafe "HsOpenSSL_X509_CRL_get_nextUpdate"
         _get_nextUpdate :: Ptr X509_CRL -> IO (Ptr ASN1_TIME)
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 foreign import ccall unsafe "X509_CRL_set1_lastUpdate"
         _set_lastUpdate :: Ptr X509_CRL -> Ptr ASN1_TIME -> IO CInt
 
@@ -129,7 +129,7 @@ foreign import ccall unsafe "HsOpenSSL_X509_CRL_get_REVOKED"
 foreign import ccall unsafe "X509_CRL_add0_revoked"
         _add0_revoked :: Ptr X509_CRL -> Ptr X509_REVOKED -> IO CInt
 
-#if OPENSSL_VERSION_NUMBER >= 0x10000000
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10000000)
 -- This function is only available on OpenSSL 1.0.0 or later.
 foreign import ccall unsafe "X509_CRL_get0_by_serial"
         _get0_by_serial :: Ptr X509_CRL -> Ptr (Ptr X509_REVOKED)
@@ -300,7 +300,7 @@ getRevokedList crl
 getSerialNumber :: Ptr X509_REVOKED -> IO (Ptr ASN1_INTEGER)
 getRevocationDate :: Ptr X509_REVOKED -> IO (Ptr ASN1_TIME)
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 
 foreign import ccall unsafe "X509_REVOKED_get0_serialNumber"
         _get0_serialNumber :: Ptr X509_REVOKED -> IO (Ptr ASN1_INTEGER)
@@ -354,7 +354,7 @@ addRevoked crl revoked
 
 -- |@'getRevoked' crl serial@ looks up the corresponding revocation.
 getRevoked :: CRL -> Integer -> IO (Maybe RevokedCertificate)
-#if OPENSSL_VERSION_NUMBER >= 0x10000000
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10000000)
 getRevoked crl serial =
   withCRLPtr crl  $ \crlPtr ->
   alloca          $ \revPtr ->

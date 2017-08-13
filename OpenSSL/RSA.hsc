@@ -41,7 +41,7 @@ import Foreign.C.Types (CInt)
 import Foreign.ForeignPtr (ForeignPtr, finalizeForeignPtr, newForeignPtr, withForeignPtr)
 import Foreign.Ptr (FunPtr, Ptr, freeHaskellFunPtr, nullFunPtr, nullPtr)
 import Foreign.Storable (Storable(..))
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 import Foreign.Marshal.Alloc (alloca)
 #endif
 import OpenSSL.BN
@@ -201,7 +201,7 @@ generateRSAKey' nbits e
 rsa_n, rsa_e, rsa_d, rsa_p, rsa_q :: Ptr RSA -> IO (Ptr BIGNUM)
 rsa_dmp1, rsa_dmq1, rsa_iqmp :: Ptr RSA -> IO (Ptr BIGNUM)
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 
 foreign import ccall unsafe "RSA_get0_key"
         _get0_key :: Ptr RSA -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO ()

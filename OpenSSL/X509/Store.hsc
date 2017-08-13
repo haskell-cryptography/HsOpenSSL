@@ -104,7 +104,7 @@ foreign import ccall unsafe "HsOpenSSL_X509_STORE_CTX_get0_current_issuer"
 foreign import ccall unsafe "HsOpenSSL_X509_STORE_CTX_get0_current_crl"
   _store_ctx_get0_current_crl :: Ptr X509_STORE_CTX -> IO (Ptr X509_CRL)
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 foreign import ccall unsafe "X509_STORE_CTX_get1_chain"
   _store_ctx_get_chain :: Ptr X509_STORE_CTX -> IO (Ptr STACK)
 #else

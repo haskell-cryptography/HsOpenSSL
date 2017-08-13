@@ -110,7 +110,7 @@ data    EVP_CIPHER_CTX
 foreign import ccall unsafe "EVP_CIPHER_CTX_new"
   _cipher_ctx_new :: IO (Ptr EVP_CIPHER_CTX)
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 foreign import ccall unsafe "EVP_CIPHER_CTX_reset"
   _cipher_ctx_reset :: Ptr EVP_CIPHER_CTX -> IO ()
 #else
@@ -242,7 +242,7 @@ newtype DigestCtx  = DigestCtx (ForeignPtr EVP_MD_CTX)
 data    EVP_MD_CTX
 
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 foreign import ccall unsafe "EVP_MD_CTX_new"
   _md_ctx_new :: IO (Ptr EVP_MD_CTX)
 foreign import ccall unsafe "EVP_MD_CTX_reset"
