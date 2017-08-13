@@ -16,7 +16,7 @@ module OpenSSL.Cipher
     , AESCtx
     , newAESCtx
     , aesCBC
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if (defined(OPENBSD) || OPENSSL_VERSION_NUMBER < 0x10100000L)
     , aesCTR
 #endif
     )
@@ -99,7 +99,7 @@ aesCBC (AESCtx ctx iv _ _ mode) input = do
     BSI.create (BS.length input) $ \out ->
     _AES_cbc_encrypt ptr out (fromIntegral len) ctxPtr ivPtr $ modeToInt mode
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if (defined(OPENBSD) || OPENSSL_VERSION_NUMBER < 0x10100000L)
 -- seems that AES_ctr128_encrypt was removed in recent OpenSSL versions
 foreign import ccall unsafe "AES_ctr128_encrypt"
         _AES_ctr_encrypt :: Ptr CChar -> Ptr Word8 -> CULong -> Ptr AES_KEY -> Ptr CUChar -> Ptr CUChar -> Ptr CUInt -> IO ()

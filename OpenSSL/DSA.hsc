@@ -152,7 +152,7 @@ dsa_p, dsa_q, dsa_g, dsa_pub_key, dsa_priv_key :: Ptr DSA -> IO (Ptr BIGNUM)
 setPQG :: Ptr DSA -> Integer -> Integer -> Integer -> IO ()
 setKey :: Ptr DSA -> Ptr BIGNUM -> Ptr BIGNUM -> IO ()
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 
 foreign import ccall unsafe "DSA_get0_pqg"
         _get0_pqg :: Ptr DSA -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO ()

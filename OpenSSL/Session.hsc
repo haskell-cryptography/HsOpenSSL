@@ -136,7 +136,7 @@ data SSLMethod_
 
 foreign import ccall unsafe "SSL_CTX_new" _ssl_ctx_new :: Ptr SSLMethod_ -> IO (Ptr SSLContext_)
 foreign import ccall unsafe "SSL_CTX_free" _ssl_ctx_free :: Ptr SSLContext_ -> IO ()
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 foreign import ccall unsafe "TLS_method" _ssl_method :: IO (Ptr SSLMethod_)
 #else
 foreign import ccall unsafe "SSLv23_method" _ssl_method :: IO (Ptr SSLMethod_)

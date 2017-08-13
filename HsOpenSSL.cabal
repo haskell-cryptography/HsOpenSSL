@@ -89,6 +89,10 @@ Library
         Include-Dirs: /opt/local/include
         Extra-Lib-Dirs: /opt/local/lib
 
+    if os(openbsd)
+        CC-Options: -DOPENBSD
+        CPP-Options: -DOPENBSD
+
     if os(mingw32)
         if arch(x86_64)
             Extra-Libraries: eay32 ssl

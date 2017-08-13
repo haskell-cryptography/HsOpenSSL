@@ -5,7 +5,7 @@
 
 /* OpenSSL ********************************************************************/
 void HsOpenSSL_init() {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     // OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, NULL);
     // unnecessary in OpenSSL 1.1.0
 #else
@@ -72,7 +72,7 @@ int HsOpenSSL_EVP_CIPHER_iv_length(EVP_CIPHER* cipher) {
 
 /* EVP HMAC *******************************************************************/
 HMAC_CTX *HsOpenSSL_HMAC_CTX_new(void) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     return HMAC_CTX_new();
 #else
     HMAC_CTX *ctx = (HMAC_CTX *)malloc(sizeof(HMAC_CTX));
@@ -82,7 +82,7 @@ HMAC_CTX *HsOpenSSL_HMAC_CTX_new(void) {
 }
 
 void HsOpenSSL_HMAC_CTX_free(HMAC_CTX *ctx) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     HMAC_CTX_free(ctx);
 #else
     HMAC_CTX_cleanup(ctx);
@@ -116,7 +116,7 @@ long HsOpenSSL_X509_CRL_get_version(X509_CRL* crl) {
 }
 
 const ASN1_TIME* HsOpenSSL_X509_CRL_get_lastUpdate(const X509_CRL* crl) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     return X509_CRL_get0_lastUpdate(crl);
 #else
     return X509_CRL_get_lastUpdate(crl);
@@ -124,7 +124,7 @@ const ASN1_TIME* HsOpenSSL_X509_CRL_get_lastUpdate(const X509_CRL* crl) {
 }
 
 const ASN1_TIME* HsOpenSSL_X509_CRL_get_nextUpdate(const X509_CRL* crl) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     return X509_CRL_get0_nextUpdate(crl);
 #else
     return X509_CRL_get_nextUpdate(crl);
@@ -140,7 +140,7 @@ STACK_OF(X509_REVOKED)* HsOpenSSL_X509_CRL_get_REVOKED(X509_CRL* crl) {
 }
 
 void HsOpenSSL_X509_ref(X509* x509) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     X509_up_ref(x509);
 #else
     CRYPTO_add(&x509->references, 1, CRYPTO_LOCK_X509);
@@ -148,7 +148,7 @@ void HsOpenSSL_X509_ref(X509* x509) {
 }
 
 void HsOpenSSL_X509_CRL_ref(X509_CRL* crl) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     X509_CRL_up_ref(crl);
 #else
     CRYPTO_add(&crl->references, 1, CRYPTO_LOCK_X509_CRL);
@@ -156,7 +156,7 @@ void HsOpenSSL_X509_CRL_ref(X509_CRL* crl) {
 }
 
 X509* HsOpenSSL_X509_STORE_CTX_get0_current_issuer(X509_STORE_CTX *ctx) {
-#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10000000L)
     return X509_STORE_CTX_get0_current_issuer(ctx);
 #else
     return ctx->current_issuer;
@@ -164,7 +164,7 @@ X509* HsOpenSSL_X509_STORE_CTX_get0_current_issuer(X509_STORE_CTX *ctx) {
 }
 
 X509_CRL* HsOpenSSL_X509_STORE_CTX_get0_current_crl(X509_STORE_CTX *ctx) {
-#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10000000L)
     return X509_STORE_CTX_get0_current_crl(ctx);
 #else
     return ctx->current_crl;
@@ -179,7 +179,7 @@ long HsOpenSSL_PKCS7_is_detached(PKCS7* pkcs7) {
 
 /* DH *************************************************************************/
 const BIGNUM *HsOpenSSL_DH_get_pub_key(DH *dh) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     const BIGNUM** pub_key = 0;
     const BIGNUM** priv_key = 0;
     DH_get0_key(dh, pub_key, priv_key);
@@ -190,7 +190,7 @@ const BIGNUM *HsOpenSSL_DH_get_pub_key(DH *dh) {
 }
 
 int HsOpenSSL_DH_length(DH *dh) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
     const BIGNUM** p = 0;
     const BIGNUM** q = 0;
     const BIGNUM** g = 0;
@@ -204,7 +204,7 @@ int HsOpenSSL_DH_length(DH *dh) {
 
 /* ASN1 ***********************************************************************/
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 #define M_ASN1_INTEGER_new()    (ASN1_INTEGER *)\
     ASN1_STRING_type_new(V_ASN1_INTEGER)
 #define M_ASN1_INTEGER_free(a)  ASN1_STRING_free((ASN1_STRING *)a)
@@ -295,7 +295,7 @@ void HsOpenSSL_setupMutex() {
  * function to skip that. Returns > 0 on success */
 int HsOpenSSL_dsa_sign(DSA *dsa, const unsigned char *ddata, int dlen,
                        const BIGNUM **r, const BIGNUM **s) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
   DSA_SIG *const sig = DSA_do_sign(ddata, dlen, dsa);
   if (!sig) return 0;
   DSA_SIG_get0(sig, r, s);
@@ -315,7 +315,7 @@ int HsOpenSSL_dsa_sign(DSA *dsa, const unsigned char *ddata, int dlen,
 
 int HsOpenSSL_dsa_verify(DSA *dsa, const unsigned char *ddata, int dlen,
                          const BIGNUM *r, const BIGNUM *s) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
   DSA_SIG* sig = DSA_SIG_new();
   DSA_SIG_set0(sig, BN_dup(r), BN_dup(s));
   int res = DSA_do_verify(ddata, dlen, sig, dsa);

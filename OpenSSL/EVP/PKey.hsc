@@ -52,7 +52,7 @@ class PublicKey a => KeyPair a where
 
 getType :: Ptr EVP_PKEY -> IO CInt
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (!defined(OPENBSD) && OPENSSL_VERSION_NUMBER >= 0x10100000L)
 foreign import ccall unsafe "EVP_PKEY_base_id"
         _base_id :: Ptr EVP_PKEY -> IO CInt
 getType = _base_id
