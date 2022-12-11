@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable       #-}
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 {-# OPTIONS_HADDOCK prune             #-}
 -- | The Digital Signature Algorithm (FIPS 186-2).
 --   See <http://www.openssl.org/docs/crypto/dsa.html>
@@ -115,37 +116,37 @@ hasDSAPrivateKey dsaPtr
     = fmap (/= nullPtr) (dsa_priv_key dsaPtr)
 
 
-foreign import ccall unsafe "&DSA_free"
+foreign import capi unsafe "openssl/dsa.h &DSA_free"
         _free :: FunPtr (Ptr DSA -> IO ())
 
-foreign import ccall unsafe "DSA_free"
+foreign import capi unsafe "openssl/dsa.h DSA_free"
         dsa_free :: Ptr DSA -> IO ()
 
-foreign import ccall unsafe "BN_free"
+foreign import capi unsafe "openssl/dsa.h BN_free"
         _bn_free :: Ptr BIGNUM -> IO ()
 
-foreign import ccall unsafe "DSA_new"
+foreign import capi unsafe "openssl/dsa.h DSA_new"
         _dsa_new :: IO (Ptr DSA)
 
-foreign import ccall unsafe "DSA_generate_key"
+foreign import capi unsafe "openssl/dsa.h DSA_generate_key"
         _dsa_generate_key :: Ptr DSA -> IO ()
 
-foreign import ccall unsafe "HsOpenSSL_dsa_sign"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_dsa_sign"
         _dsa_sign :: Ptr DSA -> CString -> CInt -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_dsa_verify"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_dsa_verify"
         _dsa_verify :: Ptr DSA -> CString -> CInt -> Ptr BIGNUM -> Ptr BIGNUM -> IO CInt
 
-foreign import ccall safe "DSA_generate_parameters"
+foreign import capi safe "openssl/dsa.h DSA_generate_parameters"
         _generate_params :: CInt -> Ptr CChar -> CInt -> Ptr CInt -> Ptr CInt -> Ptr () -> Ptr () -> IO (Ptr DSA)
 
-foreign import ccall unsafe "HsOpenSSL_DSAPublicKey_dup"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_DSAPublicKey_dup"
         _pubDup :: Ptr DSA -> IO (Ptr DSA)
 
-foreign import ccall unsafe "HsOpenSSL_DSAPrivateKey_dup"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_DSAPrivateKey_dup"
         _privDup :: Ptr DSA -> IO (Ptr DSA)
 
-foreign import ccall unsafe "DSA_size"
+foreign import capi unsafe "openssl/dsa.h DSA_size"
         _size :: Ptr DSA -> IO CInt
 
 dsa_p, dsa_q, dsa_g, dsa_pub_key, dsa_priv_key :: Ptr DSA -> IO (Ptr BIGNUM)
@@ -154,16 +155,16 @@ setKey :: Ptr DSA -> Ptr BIGNUM -> Ptr BIGNUM -> IO ()
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 
-foreign import ccall unsafe "DSA_get0_pqg"
+foreign import capi unsafe "openssl/dsa.h DSA_get0_pqg"
         _get0_pqg :: Ptr DSA -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO ()
 
-foreign import ccall unsafe "DSA_get0_key"
+foreign import capi unsafe "openssl/dsa.h DSA_get0_key"
         _get0_key :: Ptr DSA -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO ()
 
-foreign import ccall unsafe "DSA_set0_pqg"
+foreign import capi unsafe "openssl/dsa.h DSA_set0_pqg"
         _set0_pqg :: Ptr DSA -> Ptr BIGNUM -> Ptr BIGNUM -> Ptr BIGNUM -> IO CInt
 
-foreign import ccall unsafe "DSA_set0_key"
+foreign import capi unsafe "openssl/dsa.h DSA_set0_key"
         _set0_key :: Ptr DSA -> Ptr BIGNUM -> Ptr BIGNUM -> IO CInt
 
 withPQG :: (Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO a)

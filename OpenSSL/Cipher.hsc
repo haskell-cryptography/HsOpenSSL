@@ -3,6 +3,7 @@
 
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI #-}
 -- | This module interfaces to some of the OpenSSL ciphers without using
 --   EVP (see OpenSSL.EVP.Cipher). The EVP ciphers are easier to use,
 --   however, in some cases you cannot do without using the OpenSSL
@@ -39,7 +40,7 @@ modeToInt :: Num a => Mode -> a
 modeToInt Encrypt = 1
 modeToInt Decrypt = 0
 
-data AES_KEY
+data {-# CTYPE "openssl/aes.h" "AES_KEY" #-} AES_KEY
 data AESCtx = AESCtx
                 (ForeignPtr AES_KEY)  -- the key schedule
                 (ForeignPtr CUChar)   -- the IV / counter
@@ -47,21 +48,21 @@ data AESCtx = AESCtx
                 (IORef CUInt)         -- the number of bytes of the encrypted counter used
                 Mode
 
-foreign import ccall unsafe "memcpy"
+foreign import capi unsafe "string.h memcpy"
         _memcpy :: Ptr CUChar -> Ptr CChar -> CSize -> IO (Ptr ())
 
-foreign import ccall unsafe "memset"
+foreign import capi unsafe "string.h memset"
         _memset :: Ptr CUChar -> CChar -> CSize -> IO ()
 
-foreign import ccall unsafe "AES_set_encrypt_key"
+foreign import capi unsafe "openssl/aes.h AES_set_encrypt_key"
         _AES_set_encrypt_key :: Ptr CChar -> CInt -> Ptr AES_KEY -> IO CInt
-foreign import ccall unsafe "AES_set_decrypt_key"
+foreign import capi unsafe "openssl/aes.h AES_set_decrypt_key"
         _AES_set_decrypt_key :: Ptr CChar -> CInt -> Ptr AES_KEY -> IO CInt
 
-foreign import ccall unsafe "AES_cbc_encrypt"
+foreign import capi unsafe "openssl/aes.h AES_cbc_encrypt"
         _AES_cbc_encrypt :: Ptr CChar -> Ptr Word8 -> CULong -> Ptr AES_KEY -> Ptr CUChar -> CInt -> IO ()
 
-foreign import ccall unsafe "&free"
+foreign import capi unsafe "stdlib.h &free"
         _free :: FunPtr (Ptr a -> IO ())
 
 -- | Construct a new context which holds the key schedule and IV.
@@ -103,7 +104,7 @@ aesCBC (AESCtx ctx iv _ _ mode) input = do
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 -- seems that AES_ctr128_encrypt was removed in recent OpenSSL versions
-foreign import ccall unsafe "AES_ctr128_encrypt"
+foreign import capi unsafe "openssl/aes.h AES_ctr128_encrypt"
         _AES_ctr_encrypt :: Ptr CChar -> Ptr Word8 -> CULong -> Ptr AES_KEY -> Ptr CUChar -> Ptr CUChar -> Ptr CUInt -> IO ()
 
 -- | Encrypt some number of bytes using CTR mode. This is an IO function

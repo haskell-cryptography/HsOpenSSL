@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 module OpenSSL.DH.Internal (
     DH_,
     DHP,
@@ -23,7 +24,7 @@ import qualified Foreign.Concurrent as FC
 import Control.Applicative ((<$>))
 #endif
 
-data DH_
+data {-# CTYPE "openssl/dh.h" "DH" #-} DH_
 newtype DHP = DHP (ForeignPtr DH_)
 
 withDHPPtr :: DHP -> (Ptr DH_ -> IO a) -> IO a
@@ -52,5 +53,5 @@ asDH (DHP fp) = DH fp
 asDHP :: DH -> DHP
 asDHP (DH fp) = DHP fp
 
-foreign import ccall "DH_free"
+foreign import capi "openssl/dh.h DH_free"
   _DH_free :: Ptr DH_ -> IO ()

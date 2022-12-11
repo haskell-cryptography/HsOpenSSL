@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable       #-}
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 {-# OPTIONS_HADDOCK prune             #-}
 -- |An interface to RSA public key generator.
 module OpenSSL.RSA
@@ -58,7 +59,7 @@ newtype RSAKeyPair = RSAKeyPair (ForeignPtr RSA)
 
 -- RSAPubKey and RSAKeyPair are in fact the same type at the OpenSSL
 -- level, but we want to treat them differently for type-safety.
-data RSA
+data {-# CTYPE "openssl/rsa.h" "RSA" #-} RSA
 
 -- |@'RSAKey' a@ is either 'RSAPubKey' or 'RSAKeyPair'.
 class RSAKey k where
@@ -114,16 +115,16 @@ hasRSAPrivateKey rsaPtr
 
 
 
-foreign import ccall unsafe "&RSA_free"
+foreign import capi unsafe "openssl/rsa.h &RSA_free"
         _free :: FunPtr (Ptr RSA -> IO ())
 
-foreign import ccall unsafe "RSAPublicKey_dup"
+foreign import capi unsafe "openssl/rsa.h RSAPublicKey_dup"
         _pubDup :: Ptr RSA -> IO (Ptr RSA)
 
-foreign import ccall unsafe "RSAPrivateKey_dup"
+foreign import capi unsafe "openssl/rsa.h RSAPrivateKey_dup"
         _privDup :: Ptr RSA -> IO (Ptr RSA)
 
-foreign import ccall unsafe "RSA_size"
+foreign import capi unsafe "openssl/rsa.h RSA_size"
         _size :: Ptr RSA -> IO CInt
 
 -- | Make a copy of the public parameters of the given key.
@@ -160,7 +161,7 @@ type RSAGenKeyCallback' = Int -> Int -> Ptr () -> IO ()
 foreign import ccall "wrapper"
         mkGenKeyCallback :: RSAGenKeyCallback' -> IO (FunPtr RSAGenKeyCallback')
 
-foreign import ccall safe "RSA_generate_key"
+foreign import capi safe "openssl/rsa.h RSA_generate_key"
         _generate_key :: CInt -> CInt -> FunPtr RSAGenKeyCallback' -> Ptr a -> IO (Ptr RSA)
 
 -- |@'generateRSAKey'@ generates an RSA keypair.
@@ -203,13 +204,13 @@ rsa_dmp1, rsa_dmq1, rsa_iqmp :: Ptr RSA -> IO (Ptr BIGNUM)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 
-foreign import ccall unsafe "RSA_get0_key"
+foreign import capi unsafe "openssl/rsa.h RSA_get0_key"
         _get0_key :: Ptr RSA -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO ()
 
-foreign import ccall unsafe "RSA_get0_factors"
+foreign import capi unsafe "openssl/rsa.h RSA_get0_factors"
         _get0_factors :: Ptr RSA -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO ()
 
-foreign import ccall unsafe "RSA_get0_crt_params"
+foreign import capi unsafe "openssl/rsa.h RSA_get0_crt_params"
         _get0_crt_params :: Ptr RSA -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO ()
 
 withNED :: (Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> Ptr (Ptr BIGNUM) -> IO b)

@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 module OpenSSL.X509.Name
     ( X509_NAME
 
@@ -15,28 +16,28 @@ import           Foreign.C
 import           OpenSSL.ASN1
 import           OpenSSL.Utils
 
-data X509_NAME
-data X509_NAME_ENTRY
+data {-# CTYPE "openssl/x509.h" "X509_NAME" #-} X509_NAME
+data {-# CTYPE "openssl/x509.h" "X509_NAME_ENTRY" #-} X509_NAME_ENTRY
 
-foreign import ccall unsafe "X509_NAME_new"
+foreign import capi unsafe "openssl/x509.h X509_NAME_new"
         _new :: IO (Ptr X509_NAME)
 
-foreign import ccall unsafe "X509_NAME_free"
+foreign import capi unsafe "openssl/x509.h X509_NAME_free"
         _free :: Ptr X509_NAME -> IO ()
 
-foreign import ccall unsafe "X509_NAME_add_entry_by_txt"
+foreign import capi unsafe "openssl/x509.h X509_NAME_add_entry_by_txt"
         _add_entry_by_txt :: Ptr X509_NAME -> CString -> CInt -> Ptr CChar -> CInt -> CInt -> CInt -> IO CInt
 
-foreign import ccall unsafe "X509_NAME_entry_count"
+foreign import capi unsafe "openssl/x509.h X509_NAME_entry_count"
         _entry_count :: Ptr X509_NAME -> IO CInt
 
-foreign import ccall unsafe "X509_NAME_get_entry"
+foreign import capi unsafe "openssl/x509.h X509_NAME_get_entry"
         _get_entry :: Ptr X509_NAME -> CInt -> IO (Ptr X509_NAME_ENTRY)
 
-foreign import ccall unsafe "X509_NAME_ENTRY_get_object"
+foreign import capi unsafe "openssl/x509.h X509_NAME_ENTRY_get_object"
         _ENTRY_get_object :: Ptr X509_NAME_ENTRY -> IO (Ptr ASN1_OBJECT)
 
-foreign import ccall unsafe "X509_NAME_ENTRY_get_data"
+foreign import capi unsafe "openssl/x509.h X509_NAME_ENTRY_get_data"
         _ENTRY_get_data :: Ptr X509_NAME_ENTRY -> IO (Ptr ASN1_STRING)
 
 

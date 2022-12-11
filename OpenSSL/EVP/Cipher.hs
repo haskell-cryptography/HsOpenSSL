@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- |An interface to symmetric cipher algorithms.
 module OpenSSL.EVP.Cipher
     ( Cipher
@@ -25,7 +26,7 @@ import OpenSSL.EVP.Internal
 import Data.Monoid
 #endif
 
-foreign import ccall unsafe "EVP_get_cipherbyname"
+foreign import capi unsafe "openssl/evp.h EVP_get_cipherbyname"
         _get_cipherbyname :: CString -> IO (Ptr EVP_CIPHER)
 
 -- |@'getCipherByName' name@ returns a symmetric cipher algorithm

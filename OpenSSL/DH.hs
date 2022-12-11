@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- | Diffie-Hellman key exchange
 module OpenSSL.DH
     ( DHP
@@ -82,19 +83,19 @@ computeDHKey dh pubKey =
         fromIntegral <$> _DH_compute_key bsPtr (unwrapBN bn) dhPtr
           >>= failIf (< 0)
 
-foreign import ccall "DH_generate_parameters"
+foreign import capi "openssl/dh.h DH_generate_parameters"
   _DH_generate_parameters :: CInt -> CInt -> Ptr () -> Ptr () -> IO (Ptr DH_)
-foreign import ccall "DH_generate_key"
+foreign import capi "openssl/dh.h DH_generate_key"
   _DH_generate_key :: Ptr DH_ -> IO CInt
-foreign import ccall "DH_compute_key"
+foreign import capi "openssl/dh.h DH_compute_key"
   _DH_compute_key :: Ptr Word8 -> Ptr BIGNUM -> Ptr DH_ -> IO CInt
-foreign import ccall "DH_check"
+foreign import capi "openssl/dh.h DH_check"
   _DH_check :: Ptr DH_ -> Ptr CInt -> IO Bool
-foreign import ccall unsafe "DH_size"
+foreign import capi unsafe "openssl/dh.h DH_size"
   _DH_size :: Ptr DH_ -> IO CInt
-foreign import ccall unsafe "HsOpenSSL_DHparams_dup"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_DHparams_dup"
   _DH_dup :: Ptr DH_ -> IO (Ptr DH_)
-foreign import ccall unsafe "HsOpenSSL_DH_get_pub_key"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_DH_get_pub_key"
   _DH_get_pub_key :: Ptr DH_ -> IO (Ptr BIGNUM)
-foreign import ccall unsafe "HsOpenSSL_DH_length"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_DH_length"
   _DH_length :: Ptr DH_ -> IO CInt

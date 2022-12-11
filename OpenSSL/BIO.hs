@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 {- --------------------------------------------------------------------------- -}
 {-                                                                             -}
 {-                           FOR INTERNAL USE ONLY                             -}
@@ -87,25 +88,25 @@ import           System.IO.Unsafe
 
 {- bio ---------------------------------------------------------------------- -}
 
-data    BIO_METHOD
+data {-# CTYPE "openssl/bio.h" "BIO_METHOD" #-} BIO_METHOD
 
 -- |@BIO@ is a @ForeignPtr@ to an opaque BIO object. They are created by newXXX actions.
 newtype BIO  = BIO (ForeignPtr BIO_)
-data    BIO_
+data {-# CTYPE "openssl/bio.h" "BIO" #-} BIO_
 
-foreign import ccall unsafe "BIO_new"
+foreign import capi unsafe "openssl/bio.h BIO_new"
         _new :: Ptr BIO_METHOD -> IO (Ptr BIO_)
 
-foreign import ccall unsafe "BIO_free"
+foreign import capi unsafe "openssl/bio.h BIO_free"
         _free :: Ptr BIO_ -> IO ()
 
-foreign import ccall unsafe "BIO_push"
+foreign import capi unsafe "openssl/bio.h BIO_push"
         _push :: Ptr BIO_ -> Ptr BIO_ -> IO (Ptr BIO_)
 
-foreign import ccall unsafe "HsOpenSSL_BIO_set_flags"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_BIO_set_flags"
         _set_flags :: Ptr BIO_ -> CInt -> IO ()
 
-foreign import ccall unsafe "HsOpenSSL_BIO_should_retry"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_BIO_should_retry"
         _should_retry :: Ptr BIO_ -> IO CInt
 
 
@@ -178,7 +179,7 @@ bioJoin (a:b:xs) = bioPush a b >> bioJoin (b:xs)
 setFlags :: BIO -> CInt -> IO ()
 setFlags bio flags
     = withBioPtr bio $ flip _set_flags flags
-      
+
 
 bioShouldRetry :: BIO -> IO Bool
 bioShouldRetry bio
@@ -188,13 +189,13 @@ bioShouldRetry bio
 
 {- ctrl --------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "HsOpenSSL_BIO_flush"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_BIO_flush"
         _flush :: Ptr BIO_ -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_BIO_reset"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_BIO_reset"
         _reset :: Ptr BIO_ -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_BIO_eof"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_BIO_eof"
         _eof :: Ptr BIO_ -> IO CInt
 
 -- |@'bioFlush' bio@ normally writes out any internally buffered data,
@@ -223,13 +224,13 @@ bioEOF bio
 
 {- I/O ---------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "BIO_read"
+foreign import capi unsafe "openssl/bio.h BIO_read"
         _read :: Ptr BIO_ -> Ptr CChar -> CInt -> IO CInt
 
-foreign import ccall unsafe "BIO_gets"
+foreign import capi unsafe "openssl/bio.h BIO_gets"
         _gets :: Ptr BIO_ -> Ptr CChar -> CInt -> IO CInt
 
-foreign import ccall unsafe "BIO_write"
+foreign import capi unsafe "openssl/bio.h BIO_write"
         _write :: Ptr BIO_ -> Ptr CChar -> CInt -> IO CInt
 
 -- |@'bioRead' bio@ lazily reads all data in @bio@.
@@ -259,7 +260,7 @@ bioReadLBS :: BIO -> IO L.ByteString
 bioReadLBS bio = fmap L.fromChunks lazyRead
     where
       chunkSize = L.defaultChunkSize
-      
+
       lazyRead = unsafeInterleaveIO loop
 
       loop = do bs <- bioReadBS bio chunkSize
@@ -335,10 +336,10 @@ bioWriteLBS bio lbs
 
 {- base64 ------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "BIO_f_base64"
+foreign import capi unsafe "openssl/bio.h BIO_f_base64"
         f_base64 :: IO (Ptr BIO_METHOD)
 
-foreign import ccall unsafe "HsOpenSSL_BIO_FLAGS_BASE64_NO_NL"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_BIO_FLAGS_BASE64_NO_NL"
         _FLAGS_BASE64_NO_NL :: CInt
 
 -- |@'newBase64' noNL@ creates a Base64 BIO filter. This is a filter
@@ -362,10 +363,10 @@ newBase64 noNL
 
 {- buffer ------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "BIO_f_buffer"
+foreign import capi unsafe "openssl/bio.h BIO_f_buffer"
         f_buffer :: IO (Ptr BIO_METHOD)
 
-foreign import ccall unsafe "HsOpenSSL_BIO_set_buffer_size"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_BIO_set_buffer_size"
         _set_buffer_size :: Ptr BIO_ -> CInt -> IO CInt
 
 
@@ -410,10 +411,10 @@ newBuffer bufSize
 
 {- mem ---------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "BIO_s_mem"
+foreign import capi unsafe "openssl/bio.h BIO_s_mem"
         s_mem :: IO (Ptr BIO_METHOD)
 
-foreign import ccall unsafe "BIO_new_mem_buf"
+foreign import capi unsafe "openssl/bio.h BIO_new_mem_buf"
         _new_mem_buf :: Ptr CChar -> CInt -> IO (Ptr BIO_)
 
 
@@ -454,7 +455,7 @@ newConstMemBS bs
 
            bio <- newForeignPtr_ bioPtr
            Conc.addForeignPtrFinalizer bio (_free bioPtr >> touchForeignPtr foreignBuf)
-           
+
            return $ BIO bio
 
 -- |@'newConstMemLBS' lbs@ is like 'newConstMem' but takes a
@@ -465,7 +466,7 @@ newConstMemLBS lbs
 
 {- null --------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "BIO_s_null"
+foreign import capi unsafe "openssl/bio.h BIO_s_null"
         s_null :: IO (Ptr BIO_METHOD)
 
 -- |@'newNullBIO'@ creates a null BIO sink\/source. Data written to

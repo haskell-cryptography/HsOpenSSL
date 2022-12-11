@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 module OpenSSL.EVP.Internal (
     Cipher(..),
     EVP_CIPHER,
@@ -91,12 +92,12 @@ import OpenSSL.Utils
 -- |@Cipher@ is an opaque object that represents an algorithm of
 -- symmetric cipher.
 newtype Cipher     = Cipher (Ptr EVP_CIPHER)
-data    EVP_CIPHER
+data {-# CTYPE "openssl/evp.h" "EVP_CIPHER" #-} EVP_CIPHER
 
 withCipherPtr :: Cipher -> (Ptr EVP_CIPHER -> IO a) -> IO a
 withCipherPtr (Cipher cipherPtr) f = f cipherPtr
 
-foreign import ccall unsafe "HsOpenSSL_EVP_CIPHER_iv_length"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_EVP_CIPHER_iv_length"
         _iv_length :: Ptr EVP_CIPHER -> CInt
 
 cipherIvLength :: Cipher -> Int
@@ -105,26 +106,26 @@ cipherIvLength (Cipher cipherPtr) = fromIntegral $ _iv_length cipherPtr
 {- EVP_CIPHER_CTX ------------------------------------------------------------ -}
 
 newtype CipherCtx      = CipherCtx (ForeignPtr EVP_CIPHER_CTX)
-data    EVP_CIPHER_CTX
+data {-# CTYPE "openssl/evp.h" "EVP_CIPHER_CTX" #-} EVP_CIPHER_CTX
 
-foreign import ccall unsafe "EVP_CIPHER_CTX_new"
+foreign import capi unsafe "openssl/evp.h EVP_CIPHER_CTX_new"
   _cipher_ctx_new :: IO (Ptr EVP_CIPHER_CTX)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-foreign import ccall unsafe "EVP_CIPHER_CTX_reset"
+foreign import capi unsafe "openssl/evp.h EVP_CIPHER_CTX_reset"
   _cipher_ctx_reset :: Ptr EVP_CIPHER_CTX -> IO ()
 #else
-foreign import ccall unsafe "EVP_CIPHER_CTX_init"
+foreign import capi unsafe "openssl/evp.h EVP_CIPHER_CTX_init"
   _cipher_ctx_reset :: Ptr EVP_CIPHER_CTX -> IO ()
 #endif
 
-foreign import ccall unsafe "&EVP_CIPHER_CTX_free"
+foreign import capi unsafe "openssl/evp.h &EVP_CIPHER_CTX_free"
   _cipher_ctx_free :: FunPtr (Ptr EVP_CIPHER_CTX -> IO ())
 
-foreign import ccall unsafe "EVP_CIPHER_CTX_free"
+foreign import capi unsafe "openssl/evp.h EVP_CIPHER_CTX_free"
   _cipher_ctx_free' :: Ptr EVP_CIPHER_CTX -> IO ()
 
-foreign import ccall unsafe "HsOpenSSL_EVP_CIPHER_CTX_block_size"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_EVP_CIPHER_CTX_block_size"
   _cipher_ctx_block_size :: Ptr EVP_CIPHER_CTX -> CInt
 
 newCipherCtx :: IO CipherCtx
@@ -151,7 +152,7 @@ fromCryptoMode :: Num a => CryptoMode -> a
 fromCryptoMode Encrypt = 1
 fromCryptoMode Decrypt = 0
 
-foreign import ccall unsafe "EVP_CIPHER_CTX_set_padding"
+foreign import capi unsafe "openssl/evp.h EVP_CIPHER_CTX_set_padding"
   _SetPadding :: Ptr EVP_CIPHER_CTX -> CInt -> IO CInt
 
 cipherSetPadding :: CipherCtx -> Int -> IO CipherCtx
@@ -161,7 +162,7 @@ cipherSetPadding ctx pad
                >>= failIf_ (/= 1)
        return ctx
 
-foreign import ccall unsafe "EVP_CipherInit"
+foreign import capi unsafe "openssl/evp.h EVP_CipherInit"
         _CipherInit :: Ptr EVP_CIPHER_CTX
                     -> Ptr EVP_CIPHER
                     -> CString
@@ -183,7 +184,7 @@ cipherInitBS (Cipher c) key iv mode
                           >>= failIf_ (/= 1)
          return ctx
 
-foreign import ccall unsafe "EVP_CipherUpdate"
+foreign import capi unsafe "openssl/evp.h EVP_CipherUpdate"
   _CipherUpdate :: Ptr EVP_CIPHER_CTX -> Ptr CChar -> Ptr CInt
                 -> Ptr CChar -> CInt -> IO CInt
 
@@ -199,7 +200,7 @@ cipherUpdateBS ctx inBS =
               >>= failIf (/= 1)
               >>  fromIntegral <$> peek outLenPtr
 
-foreign import ccall unsafe "EVP_CipherFinal"
+foreign import capi unsafe "openssl/evp.h EVP_CipherFinal"
   _CipherFinal :: Ptr EVP_CIPHER_CTX -> Ptr CChar -> Ptr CInt -> IO CInt
 
 cipherFinalBS :: CipherCtx -> IO B8.ByteString
@@ -231,7 +232,7 @@ cipherLazily ctx (L8.Chunk x xs) = do
 -- |@Digest@ is an opaque object that represents an algorithm of
 -- message digest.
 newtype Digest = Digest (Ptr EVP_MD)
-data    EVP_MD
+data {-# CTYPE "openssl/evp.h" "EVP_MD" #-} EVP_MD
 
 withMDPtr :: Digest -> (Ptr EVP_MD -> IO a) -> IO a
 withMDPtr (Digest mdPtr) f = f mdPtr
@@ -239,22 +240,22 @@ withMDPtr (Digest mdPtr) f = f mdPtr
 {- EVP_MD_CTX ---------------------------------------------------------------- -}
 
 newtype DigestCtx  = DigestCtx (ForeignPtr EVP_MD_CTX)
-data    EVP_MD_CTX
+data {-# CTYPE "openssl/evp.h" "EVP_MD_CTX" #-}  EVP_MD_CTX
 
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-foreign import ccall unsafe "EVP_MD_CTX_new"
+foreign import capi unsafe "openssl/evp.h EVP_MD_CTX_new"
   _md_ctx_new :: IO (Ptr EVP_MD_CTX)
-foreign import ccall unsafe "EVP_MD_CTX_reset"
+foreign import capi unsafe "openssl/evp.h EVP_MD_CTX_reset"
   _md_ctx_reset :: Ptr EVP_MD_CTX -> IO ()
-foreign import ccall unsafe "&EVP_MD_CTX_free"
+foreign import capi unsafe "openssl/evp.h &EVP_MD_CTX_free"
   _md_ctx_free :: FunPtr (Ptr EVP_MD_CTX -> IO ())
 #else
-foreign import ccall unsafe "EVP_MD_CTX_create"
+foreign import capi unsafe "openssl/evp.h EVP_MD_CTX_create"
   _md_ctx_new :: IO (Ptr EVP_MD_CTX)
-foreign import ccall unsafe "EVP_MD_CTX_init"
+foreign import capi unsafe "openssl/evp.h EVP_MD_CTX_init"
   _md_ctx_reset :: Ptr EVP_MD_CTX -> IO ()
-foreign import ccall unsafe "&EVP_MD_CTX_destroy"
+foreign import capi unsafe "openssl/evp.h &EVP_MD_CTX_destroy"
   _md_ctx_free :: FunPtr (Ptr EVP_MD_CTX -> IO ())
 #endif
 
@@ -269,7 +270,7 @@ withDigestCtxPtr (DigestCtx ctx) = withForeignPtr ctx
 
 {- digest -------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "EVP_DigestInit"
+foreign import capi unsafe "openssl/evp.h EVP_DigestInit"
   _DigestInit :: Ptr EVP_MD_CTX -> Ptr EVP_MD -> IO CInt
 
 digestInit :: Digest -> IO DigestCtx
@@ -280,7 +281,7 @@ digestInit (Digest md) = do
       >>= failIf_ (/= 1)
       >>  return ctx
 
-foreign import ccall unsafe "EVP_DigestUpdate"
+foreign import capi unsafe "openssl/evp.h EVP_DigestUpdate"
   _DigestUpdate :: Ptr EVP_MD_CTX -> Ptr CChar -> CSize -> IO CInt
 
 digestUpdateBS :: DigestCtx -> B8.ByteString -> IO ()
@@ -291,7 +292,7 @@ digestUpdateBS ctx bs =
         >>= failIf (/= 1)
         >>  return ()
 
-foreign import ccall unsafe "EVP_DigestFinal"
+foreign import capi unsafe "openssl/evp.h EVP_DigestFinal"
   _DigestFinal :: Ptr EVP_MD_CTX -> Ptr CChar -> Ptr CUInt -> IO CInt
 
 digestFinalBS :: DigestCtx -> IO B8.ByteString
@@ -325,21 +326,21 @@ digestLazily md lbs = do
 
 {- HMAC ---------------------------------------------------------------------- -}
 newtype HmacCtx = HmacCtx (ForeignPtr HMAC_CTX)
-data HMAC_CTX
+data {-# CTYPE "openssl/hmac.h" "HMAC_CTX" #-} HMAC_CTX
 
-foreign import ccall unsafe "HsOpenSSL_HMAC_CTX_new"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_HMAC_CTX_new"
   _hmac_ctx_new :: IO (Ptr HMAC_CTX)
 
-foreign import ccall unsafe "HMAC_Init"
+foreign import capi unsafe "openssl/hmac.h HMAC_Init"
   _hmac_init :: Ptr HMAC_CTX -> Ptr () -> CInt -> Ptr EVP_MD -> IO CInt
 
-foreign import ccall unsafe "HMAC_Update"
+foreign import capi unsafe "openssl/hmac.h HMAC_Update"
   _hmac_update :: Ptr HMAC_CTX -> Ptr CChar -> CInt -> IO CInt
 
-foreign import ccall unsafe "HMAC_Final"
+foreign import capi unsafe "openssl/hmac.h HMAC_Final"
   _hmac_final :: Ptr HMAC_CTX -> Ptr CChar -> Ptr CInt -> IO CUInt
 
-foreign import ccall unsafe "&HsOpenSSL_HMAC_CTX_free"
+foreign import capi unsafe "HsOpenSSL &HsOpenSSL_HMAC_CTX_free"
   _hmac_ctx_free :: FunPtr (Ptr HMAC_CTX -> IO ())
 
 newHmacCtx :: IO HmacCtx
@@ -384,7 +385,7 @@ hmacLazily md key lbs = do
 -- | VaguePKey is a 'ForeignPtr' to 'EVP_PKEY', that is either public
 -- key or a ker pair. We can't tell which at compile time.
 newtype VaguePKey = VaguePKey (ForeignPtr EVP_PKEY)
-data    EVP_PKEY
+data {-# CTYPE "openssl/evp.h" "EVP_PKEY" #-} EVP_PKEY
 
 -- | Instances of class 'PKey' can be converted back and forth to
 -- 'VaguePKey'.
@@ -402,13 +403,13 @@ class PKey k where
     -- | Return the default digesting algorithm for the key.
     pkeyDefaultMD :: k -> IO Digest
 
-foreign import ccall unsafe "EVP_PKEY_new"
+foreign import capi unsafe "openssl/evp.h EVP_PKEY_new"
   _pkey_new :: IO (Ptr EVP_PKEY)
 
-foreign import ccall unsafe "&EVP_PKEY_free"
+foreign import capi unsafe "openssl/evp.h &EVP_PKEY_free"
   _pkey_free :: FunPtr (Ptr EVP_PKEY -> IO ())
 
-foreign import ccall unsafe "EVP_PKEY_free"
+foreign import capi unsafe "openssl/evp.h EVP_PKEY_free"
   _pkey_free' :: Ptr EVP_PKEY -> IO ()
 
 wrapPKeyPtr :: Ptr EVP_PKEY -> IO VaguePKey

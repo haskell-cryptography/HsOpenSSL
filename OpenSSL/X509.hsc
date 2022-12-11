@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 {-# OPTIONS_HADDOCK prune             #-}
 -- |An interface to X.509 certificate.
 module OpenSSL.X509
@@ -74,89 +75,89 @@ import Data.ByteString.Lazy (ByteString)
 
 -- |@'X509'@ is an opaque object that represents X.509 certificate.
 newtype X509  = X509 (ForeignPtr X509_)
-data    X509_
+data {-# CTYPE "openssl/x509.h" "X509" #-} X509_
 
 
-foreign import ccall unsafe "X509_new"
+foreign import capi unsafe "openssl/x509.h X509_new"
         _new :: IO (Ptr X509_)
 
-foreign import ccall unsafe "&X509_free"
+foreign import capi unsafe "openssl/x509.h &X509_free"
         _free :: FunPtr (Ptr X509_ -> IO ())
 
-foreign import ccall unsafe "X509_print"
+foreign import capi unsafe "openssl/x509.h X509_print"
         _print :: Ptr BIO_ -> Ptr X509_ -> IO CInt
 
-foreign import ccall unsafe "X509_cmp"
+foreign import capi unsafe "openssl/x509.h X509_cmp"
         _cmp :: Ptr X509_ -> Ptr X509_ -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_X509_get_version"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_get_version"
         _get_version :: Ptr X509_ -> IO CLong
 
-foreign import ccall unsafe "X509_set_version"
+foreign import capi unsafe "openssl/x509.h X509_set_version"
         _set_version :: Ptr X509_ -> CLong -> IO CInt
 
-foreign import ccall unsafe "X509_get_serialNumber"
+foreign import capi unsafe "openssl/x509.h X509_get_serialNumber"
         _get_serialNumber :: Ptr X509_ -> IO (Ptr ASN1_INTEGER)
 
-foreign import ccall unsafe "X509_set_serialNumber"
+foreign import capi unsafe "openssl/x509.h X509_set_serialNumber"
         _set_serialNumber :: Ptr X509_ -> Ptr ASN1_INTEGER -> IO CInt
 
-foreign import ccall unsafe "X509_get_issuer_name"
+foreign import capi unsafe "openssl/x509.h X509_get_issuer_name"
         _get_issuer_name :: Ptr X509_ -> IO (Ptr X509_NAME)
 
-foreign import ccall unsafe "X509_set_issuer_name"
+foreign import capi unsafe "openssl/x509.h X509_set_issuer_name"
         _set_issuer_name :: Ptr X509_ -> Ptr X509_NAME -> IO CInt
 
-foreign import ccall unsafe "X509_get_subject_name"
+foreign import capi unsafe "openssl/x509.h X509_get_subject_name"
         _get_subject_name :: Ptr X509_ -> IO (Ptr X509_NAME)
 
-foreign import ccall unsafe "X509_set_subject_name"
+foreign import capi unsafe "openssl/x509.h X509_set_subject_name"
         _set_subject_name :: Ptr X509_ -> Ptr X509_NAME -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_X509_get_notBefore"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_get_notBefore"
         _get_notBefore :: Ptr X509_ -> IO (Ptr ASN1_TIME)
 
-foreign import ccall unsafe "HsOpenSSL_X509_get_notAfter"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_get_notAfter"
         _get_notAfter :: Ptr X509_ -> IO (Ptr ASN1_TIME)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-foreign import ccall unsafe "X509_set1_notBefore"
+foreign import capi unsafe "openssl/x509.h X509_set1_notBefore"
         _set_notBefore :: Ptr X509_ -> Ptr ASN1_TIME -> IO CInt
 
-foreign import ccall unsafe "X509_set1_notAfter"
+foreign import capi unsafe "openssl/x509.h X509_set1_notAfter"
         _set_notAfter :: Ptr X509_ -> Ptr ASN1_TIME -> IO CInt
 #else
-foreign import ccall unsafe "X509_set_notBefore"
+foreign import capi unsafe "openssl/x509.h X509_set_notBefore"
         _set_notBefore :: Ptr X509_ -> Ptr ASN1_TIME -> IO CInt
 
-foreign import ccall unsafe "X509_set_notAfter"
+foreign import capi unsafe "openssl/x509.h X509_set_notAfter"
         _set_notAfter :: Ptr X509_ -> Ptr ASN1_TIME -> IO CInt
 #endif
 
-foreign import ccall unsafe "X509_get_pubkey"
+foreign import capi unsafe "openssl/x509.h X509_get_pubkey"
         _get_pubkey :: Ptr X509_ -> IO (Ptr EVP_PKEY)
 
-foreign import ccall unsafe "X509_set_pubkey"
+foreign import capi unsafe "openssl/x509.h X509_set_pubkey"
         _set_pubkey :: Ptr X509_ -> Ptr EVP_PKEY -> IO CInt
 
-foreign import ccall unsafe "X509_get1_email"
+foreign import capi unsafe "openssl/x509.h X509_get1_email"
         _get1_email :: Ptr X509_ -> IO (Ptr STACK)
 
-foreign import ccall unsafe "X509_email_free"
+foreign import capi unsafe "openssl/x509.h X509_email_free"
         _email_free :: Ptr STACK -> IO ()
 
-foreign import ccall unsafe "X509_sign"
+foreign import capi unsafe "openssl/x509.h X509_sign"
         _sign :: Ptr X509_ -> Ptr EVP_PKEY -> Ptr EVP_MD -> IO CInt
 
-foreign import ccall unsafe "X509_verify"
+foreign import capi unsafe "openssl/x509.h X509_verify"
         _verify :: Ptr X509_ -> Ptr EVP_PKEY -> IO CInt
 
-foreign import ccall safe "i2d_X509_bio"
+foreign import capi safe "openssl/x509.h i2d_X509_bio"
         _write_bio_X509 :: Ptr BIO_
                         -> Ptr X509_
                         -> IO CInt
 
-foreign import ccall safe "d2i_X509_bio"
+foreign import capi safe "openssl/x509.h d2i_X509_bio"
         _read_bio_X509 :: Ptr BIO_
                        -> Ptr (Ptr X509_)
                        -> IO (Ptr X509_)
@@ -218,9 +219,9 @@ writeDerX509 x509
 readX509' :: BIO -> IO X509
 readX509' bio
     = withBioPtr bio $ \ bioPtr ->
-      _read_bio_X509 bioPtr nullPtr 
+      _read_bio_X509 bioPtr nullPtr
            >>= failIfNull
-           >>= wrapX509 
+           >>= wrapX509
 
 -- |@'readDerX509' der@ reads in a certificate.
 readDerX509 :: ByteString -> IO X509

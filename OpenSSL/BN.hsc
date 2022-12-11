@@ -10,6 +10,7 @@
 #endif
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 #if defined(FAST_BIGNUM)
 {-# LANGUAGE MagicHash                #-}
 {-# LANGUAGE UnboxedTuples            #-}
@@ -69,13 +70,13 @@ import           Foreign.C
 
 -- |'BigNum' is an opaque object representing a big number.
 newtype BigNum = BigNum (Ptr BIGNUM)
-data BIGNUM
+data {-# CTYPE "openssl/bn.h" "BIGNUM" #-} BIGNUM
 
 
-foreign import ccall unsafe "BN_new"
+foreign import capi unsafe "openssl/bn.h BN_new"
         _new :: IO (Ptr BIGNUM)
 
-foreign import ccall unsafe "BN_free"
+foreign import capi unsafe "openssl/bn.h BN_free"
         _free :: Ptr BIGNUM -> IO ()
 
 -- |@'allocaBN' f@ allocates a 'BigNum' and computes @f@. Then it
@@ -97,13 +98,13 @@ wrapBN = BigNum
 
 {- slow, safe functions ----------------------------------------------------- -}
 
-foreign import ccall unsafe "BN_bn2dec"
+foreign import capi unsafe "openssl/bn.h BN_bn2dec"
         _bn2dec :: Ptr BIGNUM -> IO CString
 
-foreign import ccall unsafe "BN_dec2bn"
+foreign import capi unsafe "openssl/bn.h BN_dec2bn"
         _dec2bn :: Ptr (Ptr BIGNUM) -> CString -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_OPENSSL_free"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_OPENSSL_free"
         _openssl_free :: Ptr a -> IO ()
 
 -- |Convert a BIGNUM to an 'Integer'.
@@ -137,10 +138,10 @@ integerToBN i = do
 -- GC could do nasty things to the data which we thought that we had a pointer
 -- to
 
-foreign import ccall unsafe "memcpy"
+foreign import capi unsafe "string.h memcpy"
         _copy_in :: ByteArray## -> Ptr () -> CSize -> IO (Ptr ())
 
-foreign import ccall unsafe "memcpy"
+foreign import capi unsafe "string.h memcpy"
         _copy_out :: Ptr () -> ByteArray## -> CSize -> IO (Ptr ())
 
 -- These are taken from Data.Binary's disabled fast Integer support
@@ -242,10 +243,10 @@ integerToBN v =
 withBN :: Integer -> (BigNum -> IO a) -> IO a
 withBN dec m = bracket (integerToBN dec) (_free . unwrapBN) m
 
-foreign import ccall unsafe "BN_bn2mpi"
+foreign import capi unsafe "openssl/bn.h BN_bn2mpi"
         _bn2mpi :: Ptr BIGNUM -> Ptr CChar -> IO CInt
 
-foreign import ccall unsafe "BN_mpi2bn"
+foreign import capi unsafe "openssl/bn.h BN_mpi2bn"
         _mpi2bn :: Ptr CChar -> CInt -> Ptr BIGNUM -> IO (Ptr BIGNUM)
 
 -- |This is an alias to 'bnToInteger'.
@@ -284,16 +285,16 @@ mpiToInteger mpi = do
   _free (unwrapBN bn)
   return v
 
-foreign import ccall unsafe "BN_mod_exp"
-        _mod_exp :: Ptr BIGNUM -> Ptr BIGNUM -> Ptr BIGNUM -> Ptr BIGNUM -> BNCtx -> IO (Ptr BIGNUM)
+foreign import capi unsafe "openssl/bn.h BN_mod_exp"
+        _mod_exp :: Ptr BIGNUM -> Ptr BIGNUM -> Ptr BIGNUM -> Ptr BIGNUM -> BNCtx -> IO CInt
 
 type BNCtx = Ptr BNCTX
-data BNCTX
+data {-# CTYPE "openssl/bn.h" "BN_CTX" #-} BNCTX
 
-foreign import ccall unsafe "BN_CTX_new"
+foreign import capi unsafe "openssl/bn.h BN_CTX_new"
         _BN_ctx_new :: IO BNCtx
 
-foreign import ccall unsafe "BN_CTX_free"
+foreign import capi unsafe "openssl/bn.h BN_CTX_free"
         _BN_ctx_free :: BNCtx -> IO ()
 
 withBNCtx :: (BNCtx -> IO a) -> IO a
@@ -312,10 +313,10 @@ modexp a p m = unsafePerformIO (do
 
 {- Random Integer generation ------------------------------------------------ -}
 
-foreign import ccall unsafe "BN_rand_range"
+foreign import capi unsafe "openssl/bn.h BN_rand_range"
         _BN_rand_range :: Ptr BIGNUM -> Ptr BIGNUM -> IO CInt
 
-foreign import ccall unsafe "BN_pseudo_rand_range"
+foreign import capi unsafe "openssl/bn.h BN_pseudo_rand_range"
         _BN_pseudo_rand_range :: Ptr BIGNUM -> Ptr BIGNUM -> IO CInt
 
 -- | Return a strongly random number in the range 0 <= x < n where the given

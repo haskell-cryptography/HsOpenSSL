@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- |Message signing using asymmetric cipher and message digest
 -- algorithm. This is an opposite of "OpenSSL.EVP.Verify".
 module OpenSSL.EVP.Sign
@@ -21,7 +22,7 @@ import           OpenSSL.EVP.PKey
 import           OpenSSL.EVP.Internal
 import           OpenSSL.Utils
 
-foreign import ccall unsafe "EVP_SignFinal"
+foreign import capi unsafe "openssl/evp.h EVP_SignFinal"
   _SignFinal :: Ptr EVP_MD_CTX -> Ptr Word8 -> Ptr CUInt
              -> Ptr EVP_PKEY -> IO CInt
 

@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- |Asymmetric cipher decryption using encrypted symmetric key. This
 -- is an opposite of "OpenSSL.EVP.Seal".
 module OpenSSL.EVP.Open
@@ -24,7 +25,7 @@ import OpenSSL.EVP.Internal
 import OpenSSL.Utils
 import System.IO.Unsafe (unsafePerformIO)
 
-foreign import ccall unsafe "EVP_OpenInit"
+foreign import capi unsafe "openssl/evp.h EVP_OpenInit"
         _OpenInit :: Ptr EVP_CIPHER_CTX
                   -> Cipher
                   -> Ptr CChar

@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable        #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE ForeignFunctionInterface  #-}
+{-# LANGUAGE CApiFFI                   #-}
 {-# LANGUAGE Rank2Types                #-}
 {-# OPTIONS_GHC -fno-warn-orphans      #-}
 -- |An interface to asymmetric cipher keypair.
@@ -52,9 +53,9 @@ class PublicKey a => KeyPair a where
 
 
 #if OPENSSL_VERSION_PREREQ(3,0)
-foreign import ccall unsafe "EVP_PKEY_get_base_id" getType :: Ptr EVP_PKEY -> IO CInt
+foreign import capi unsafe "openssl/evp.h EVP_PKEY_get_base_id" getType :: Ptr EVP_PKEY -> IO CInt
 #elif OPENSSL_VERSION_NUMBER >= 0x10100000L
-foreign import ccall unsafe "EVP_PKEY_base_id" getType :: Ptr EVP_PKEY -> IO CInt
+foreign import capi unsafe "openssl/evp.h EVP_PKEY_base_id" getType :: Ptr EVP_PKEY -> IO CInt
 #else
 getType :: Ptr EVP_PKEY -> IO CInt
 getType = (#peek EVP_PKEY, type)
@@ -157,10 +158,10 @@ instance PKey SomeKeyPair where
 
 #if !defined(OPENSSL_NO_RSA)
 -- The resulting Ptr RSA must be freed by caller.
-foreign import ccall unsafe "EVP_PKEY_get1_RSA"
+foreign import capi unsafe "openssl/evp.h EVP_PKEY_get1_RSA"
         _get1_RSA :: Ptr EVP_PKEY -> IO (Ptr RSA)
 
-foreign import ccall unsafe "EVP_PKEY_set1_RSA"
+foreign import capi unsafe "openssl/evp.h EVP_PKEY_set1_RSA"
         _set1_RSA :: Ptr EVP_PKEY -> Ptr RSA -> IO CInt
 
 
@@ -197,10 +198,10 @@ instance PKey RSAKeyPair where
 
 
 #if !defined(OPENSSL_NO_DSA)
-foreign import ccall unsafe "EVP_PKEY_get1_DSA"
+foreign import capi unsafe "openssl/evp.h EVP_PKEY_get1_DSA"
         _get1_DSA :: Ptr EVP_PKEY -> IO (Ptr DSA)
 
-foreign import ccall unsafe "EVP_PKEY_set1_DSA"
+foreign import capi unsafe "openssl/evp.h EVP_PKEY_set1_DSA"
         _set1_DSA :: Ptr EVP_PKEY -> Ptr DSA -> IO CInt
 
 dsaToPKey :: DSAKey k => k -> IO VaguePKey
@@ -208,6 +209,7 @@ dsaToPKey dsa
     = withDSAPtr dsa $ \dsaPtr ->
         createPKey $ \pkeyPtr ->
           _set1_DSA pkeyPtr dsaPtr >>= failIf_ (/= 1)
+
 
 dsaFromPKey :: DSAKey k => VaguePKey -> IO (Maybe k)
 dsaFromPKey pk

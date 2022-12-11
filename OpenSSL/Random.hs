@@ -1,4 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- | PRNG services
 --   See <http://www.openssl.org/docs/crypto/rand.html>
 --   For random Integer generation, see "OpenSSL.BN"
@@ -13,13 +14,13 @@ import           Foreign.C.Types
 import qualified Data.ByteString as BS
 import           OpenSSL.Utils
 
-foreign import ccall unsafe "RAND_bytes"
+foreign import capi unsafe "openssl/rand.h RAND_bytes"
         _RAND_bytes :: Ptr CChar -> CInt -> IO CInt
 
-foreign import ccall unsafe "RAND_pseudo_bytes"
+foreign import capi unsafe "openssl/rand.h RAND_pseudo_bytes"
         _RAND_pseudo_bytes :: Ptr CChar -> CInt -> IO ()
 
-foreign import ccall unsafe "RAND_add"
+foreign import capi unsafe "openssl/rand.h RAND_add"
         _RAND_add :: Ptr CChar -> CInt -> CInt -> IO ()
 
 -- | Return a bytestring consisting of the given number of strongly random

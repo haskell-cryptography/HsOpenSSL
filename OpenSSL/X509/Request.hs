@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 {-# OPTIONS_HADDOCK prune             #-}
 -- |An interface to PKCS#10 certificate request.
 module OpenSSL.X509.Request
@@ -53,50 +54,50 @@ import           OpenSSL.Stack
 -- |@'X509Req'@ is an opaque object that represents PKCS#10
 -- certificate request.
 newtype X509Req  = X509Req (ForeignPtr X509_REQ)
-data    X509_REQ
+data {-# CTYPE "openssl/x509.h" "X509_REQ" #-} X509_REQ
 
-data    X509_EXT
+data X509_EXT
 
-foreign import ccall unsafe "X509_REQ_new"
+foreign import capi unsafe "openssl/x509.h X509_REQ_new"
         _new :: IO (Ptr X509_REQ)
 
-foreign import ccall unsafe "&X509_REQ_free"
+foreign import capi unsafe "openssl/x509.h &X509_REQ_free"
         _free :: FunPtr (Ptr X509_REQ -> IO ())
 
-foreign import ccall unsafe "X509_REQ_sign"
+foreign import capi unsafe "openssl/x509.h X509_REQ_sign"
         _sign :: Ptr X509_REQ -> Ptr EVP_PKEY -> Ptr EVP_MD -> IO CInt
 
-foreign import ccall unsafe "X509_REQ_verify"
+foreign import capi unsafe "openssl/x509.h X509_REQ_verify"
         _verify :: Ptr X509_REQ -> Ptr EVP_PKEY -> IO CInt
 
-foreign import ccall unsafe "X509_REQ_print"
+foreign import capi unsafe "openssl/x509.h X509_REQ_print"
         _print :: Ptr BIO_ -> Ptr X509_REQ -> IO CInt
 
-foreign import ccall unsafe "i2d_X509_REQ_bio"
+foreign import capi unsafe "openssl/x509.h i2d_X509_REQ_bio"
         _req_to_der :: Ptr BIO_ -> Ptr X509_REQ -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_X509_REQ_get_version"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_REQ_get_version"
         _get_version :: Ptr X509_REQ -> IO CLong
 
-foreign import ccall unsafe "X509_REQ_set_version"
+foreign import capi unsafe "openssl/x509.h X509_REQ_set_version"
         _set_version :: Ptr X509_REQ -> CLong -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_X509_REQ_get_subject_name"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_REQ_get_subject_name"
         _get_subject_name :: Ptr X509_REQ -> IO (Ptr X509_NAME)
 
-foreign import ccall unsafe "X509_REQ_set_subject_name"
+foreign import capi unsafe "openssl/x509.h X509_REQ_set_subject_name"
         _set_subject_name :: Ptr X509_REQ -> Ptr X509_NAME -> IO CInt
 
-foreign import ccall unsafe "X509_REQ_get_pubkey"
+foreign import capi unsafe "openssl/x509.h X509_REQ_get_pubkey"
         _get_pubkey :: Ptr X509_REQ -> IO (Ptr EVP_PKEY)
 
-foreign import ccall unsafe "X509_REQ_set_pubkey"
+foreign import capi unsafe "openssl/x509.h X509_REQ_set_pubkey"
         _set_pubkey :: Ptr X509_REQ -> Ptr EVP_PKEY -> IO CInt
 
-foreign import ccall unsafe "X509V3_EXT_nconf_nid"
+foreign import capi unsafe "openssl/x509.h X509V3_EXT_nconf_nid"
         _ext_create :: Ptr a -> Ptr b -> CInt -> CString -> IO (Ptr X509_EXT)
 
-foreign import ccall unsafe "X509_REQ_add_extensions"
+foreign import capi unsafe "openssl/x509.h X509_REQ_add_extensions"
         _req_add_extensions :: Ptr X509_REQ -> Ptr STACK -> IO CInt
 
 

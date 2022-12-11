@@ -5,6 +5,7 @@
 {-# LANGUAGE EmptyDataDecls              #-}
 {-# LANGUAGE ExistentialQuantification   #-}
 {-# LANGUAGE ForeignFunctionInterface    #-}
+{-# LANGUAGE CApiFFI                     #-}
 {-# LANGUAGE NamedFieldPuns              #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 -- | Functions for handling SSL connections. These functions use GHC specific
@@ -128,7 +129,7 @@ type VerifyCb = Bool -> Ptr X509_STORE_CTX -> IO Bool
 
 foreign import ccall "wrapper" mkVerifyCb :: VerifyCb -> IO (FunPtr VerifyCb)
 
-data SSLContext_
+data {-# CTYPE "openssl/ssl.h" "SSL_CTX" #-} SSLContext_
 -- | An SSL context. Contexts carry configuration such as a server's private
 --   key, root CA certiifcates etc. Contexts are stateful IO objects; they
 --   start empty and various options are set on them by the functions in this
@@ -139,14 +140,14 @@ data SSLContext = SSLContext { ctxMVar :: MVar (Ptr SSLContext_)
                              }
                 deriving Typeable
 
-data SSLMethod_
+data {-# CTYPE "openssl/ssl.h" "const SSL_METHOD" #-} SSLMethod_
 
-foreign import ccall unsafe "SSL_CTX_new" _ssl_ctx_new :: Ptr SSLMethod_ -> IO (Ptr SSLContext_)
-foreign import ccall unsafe "SSL_CTX_free" _ssl_ctx_free :: Ptr SSLContext_ -> IO ()
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_new" _ssl_ctx_new :: Ptr SSLMethod_ -> IO (Ptr SSLContext_)
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_free" _ssl_ctx_free :: Ptr SSLContext_ -> IO ()
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-foreign import ccall unsafe "TLS_method" _ssl_method :: IO (Ptr SSLMethod_)
+foreign import capi unsafe "openssl/ssl.h TLS_method" _ssl_method :: IO (Ptr SSLMethod_)
 #else
-foreign import ccall unsafe "SSLv23_method" _ssl_method :: IO (Ptr SSLMethod_)
+foreign import capi unsafe "openssl/ssl.h SSLv23_method" _ssl_method :: IO (Ptr SSLMethod_)
 #endif
 
 -- | Create a new SSL context.
@@ -172,10 +173,10 @@ withContext = withMVar . ctxMVar
 touchContext :: SSLContext -> IO ()
 touchContext = (>> return ()) . isEmptyMVar . ctxMVar
 
-foreign import ccall unsafe "HsOpenSSL_SSL_CTX_set_options"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_SSL_CTX_set_options"
     _SSL_CTX_set_options :: Ptr SSLContext_ -> CLong -> IO CLong
 
-foreign import ccall unsafe "HsOpenSSL_SSL_CTX_clear_options"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_SSL_CTX_clear_options"
     _SSL_CTX_clear_options :: Ptr SSLContext_ -> CLong -> IO CLong
 
 -- | Add a protocol option to the context.
@@ -199,9 +200,9 @@ contextLoadFile f context path =
       unless (result == 1)
           $ f ctx cpath (#const SSL_FILETYPE_ASN1) >>= failIf_ (/= 1)
 
-foreign import ccall unsafe "SSL_CTX_use_PrivateKey"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_use_PrivateKey"
     _ssl_ctx_use_privatekey :: Ptr SSLContext_ -> Ptr EVP_PKEY -> IO CInt
-foreign import ccall unsafe "SSL_CTX_use_certificate"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_use_certificate"
     _ssl_ctx_use_certificate :: Ptr SSLContext_ -> Ptr X509_ -> IO CInt
 
 -- | Install a private key into a context.
@@ -220,9 +221,9 @@ contextSetCertificate context cert
           _ssl_ctx_use_certificate ctx certPtr
                >>= failIf_ (/= 1)
 
-foreign import ccall unsafe "SSL_CTX_use_PrivateKey_file"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_use_PrivateKey_file"
    _ssl_ctx_use_privatekey_file :: Ptr SSLContext_ -> CString -> CInt -> IO CInt
-foreign import ccall unsafe "SSL_CTX_use_certificate_file"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_use_certificate_file"
    _ssl_ctx_use_certificate_file :: Ptr SSLContext_ -> CString -> CInt -> IO CInt
 
 -- | Install a private key file in a context. The key is given as a path to the
@@ -237,7 +238,7 @@ contextSetPrivateKeyFile = contextLoadFile _ssl_ctx_use_privatekey_file
 contextSetCertificateFile :: SSLContext -> FilePath -> IO ()
 contextSetCertificateFile = contextLoadFile _ssl_ctx_use_certificate_file
 
-foreign import ccall unsafe "SSL_CTX_use_certificate_chain_file"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_use_certificate_chain_file"
    _ssl_ctx_use_certificate_chain_file :: Ptr SSLContext_ -> CString -> IO CInt
 
 -- | Install a certificate chain in a context. The certificates must be in PEM
@@ -250,7 +251,7 @@ contextSetCertificateChainFile context path =
     withCString path $ \cpath ->
       _ssl_ctx_use_certificate_chain_file ctx cpath >>= failIf_ (/= 1)
 
-foreign import ccall unsafe "SSL_CTX_set_cipher_list"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_set_cipher_list"
    _ssl_ctx_set_cipher_list :: Ptr SSLContext_ -> CString -> IO CInt
 
 -- | Set the ciphers to be used by the given context. The string argument is a
@@ -269,7 +270,7 @@ contextSetCiphers context list =
 contextSetDefaultCiphers :: SSLContext -> IO ()
 contextSetDefaultCiphers = flip contextSetCiphers "DEFAULT"
 
-foreign import ccall unsafe "SSL_CTX_check_private_key"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_check_private_key"
    _ssl_ctx_check_private_key :: Ptr SSLContext_ -> IO CInt
 
 -- | Return true iff the private key installed in the given context matches the
@@ -288,7 +289,7 @@ data VerificationMode = VerifyNone
                         }
                       deriving Typeable
 
-foreign import ccall unsafe "SSL_CTX_set_verify"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_set_verify"
    _ssl_set_verify_mode :: Ptr SSLContext_ -> CInt -> FunPtr VerifyCb -> IO ()
 
 contextSetVerificationMode :: SSLContext -> VerificationMode -> IO ()
@@ -310,7 +311,7 @@ contextSetVerificationMode context (VerifyPeer reqp oncep cbp) = do
     _ssl_set_verify_mode ctx mode $ fromMaybe nullFunPtr newCb
     return ()
 
-foreign import ccall unsafe "SSL_CTX_set_default_verify_paths"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_set_default_verify_paths"
   _ssl_set_default_verify_paths :: Ptr SSLContext_ -> IO CInt
 
 -- | Specifies that the default locations from which CA certificates are loaded
@@ -331,7 +332,7 @@ contextSetDefaultVerifyPaths context =
   withContext context $ \ctx ->
     _ssl_set_default_verify_paths ctx >>= failIf_ (/= 1)
 
-foreign import ccall unsafe "SSL_CTX_load_verify_locations"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_load_verify_locations"
   _ssl_load_verify_locations :: Ptr SSLContext_ -> Ptr CChar -> Ptr CChar -> IO CInt
 
 -- | Set the location of a PEM encoded list of CA certificates to be used when
@@ -352,7 +353,7 @@ contextSetCADirectory context path =
     withCString path $ \cpath ->
         _ssl_load_verify_locations ctx nullPtr cpath >>= failIf_ (/= 1)
 
-foreign import ccall unsafe "SSL_CTX_get_cert_store"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_get_cert_store"
   _ssl_get_cert_store :: Ptr SSLContext_ -> IO (Ptr X509_STORE)
 
 -- | Get a reference to, not a copy of, the X.509 certificate storage
@@ -363,7 +364,7 @@ contextGetCAStore context
       _ssl_get_cert_store ctx
            >>= wrapX509Store (touchContext context)
 
-foreign import ccall unsafe "SSL_CTX_set_session_id_context"
+foreign import capi unsafe "openssl/ssl.h SSL_CTX_set_session_id_context"
   _ssl_set_session_id_context :: Ptr SSLContext_ -> Ptr CChar -> CUInt -> IO CInt
 
 -- | Set context within which session can be reused (server side only).
@@ -377,7 +378,7 @@ contextSetSessionIdContext context idCtx =
         _ssl_set_session_id_context ctx cIdCtx (fromIntegral len) >>= failIf_ (/= 1)
 
 
-data SSL_
+data {-# CTYPE "openssl/ssl.h" "SSL" #-} SSL_
 -- | This is the type of an SSL connection
 --
 --   IO with SSL objects is non-blocking and many SSL functions return a error
@@ -393,9 +394,9 @@ data SSL = SSL { sslCtx    :: SSLContext
                }
            deriving Typeable
 
-foreign import ccall unsafe "SSL_new" _ssl_new :: Ptr SSLContext_ -> IO (Ptr SSL_)
-foreign import ccall unsafe "SSL_free" _ssl_free :: Ptr SSL_ -> IO ()
-foreign import ccall unsafe "SSL_set_fd" _ssl_set_fd :: Ptr SSL_ -> CInt -> IO ()
+foreign import capi unsafe "openssl/ssl.h SSL_new" _ssl_new :: Ptr SSLContext_ -> IO (Ptr SSL_)
+foreign import capi unsafe "openssl/ssl.h SSL_free" _ssl_free :: Ptr SSL_ -> IO ()
+foreign import capi unsafe "openssl/ssl.h SSL_set_fd" _ssl_set_fd :: Ptr SSL_ -> CInt -> IO ()
 
 connection' :: SSLContext -> Fd -> Maybe Socket -> IO SSL
 connection' context fd@(Fd fdInt) sock = do
@@ -442,13 +443,13 @@ fdConnection context fd = connection' context fd Nothing
 withSSL :: SSL -> (Ptr SSL_ -> IO a) -> IO a
 withSSL = withMVar . sslMVar
 
-foreign import ccall unsafe "HsOpenSSL_SSL_set_options"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_SSL_set_options"
     _SSL_set_options :: Ptr SSL_ -> CLong -> IO CLong
 
-foreign import ccall unsafe "HsOpenSSL_SSL_clear_options"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_SSL_clear_options"
     _SSL_clear_options :: Ptr SSL_ -> CLong -> IO CLong
 
-foreign import ccall unsafe "HsOpenSSL_SSL_set_tlsext_host_name"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_SSL_set_tlsext_host_name"
     _SSL_set_tlsext_host_name :: Ptr SSL_ -> CString -> IO CLong
 
 -- | Add a protocol option to the SSL connection.
@@ -472,7 +473,7 @@ setTlsextHostName ssl h =
 
 -- Hostname validation, inspired by https://wiki.openssl.org/index.php/Hostname_validation
 
-foreign import ccall unsafe "HsOpenSSL_enable_hostname_validation"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_enable_hostname_validation"
   _enable_hostname_validation :: Ptr SSL_ -> CString -> CSize -> IO CInt
 
 -- | Enable hostname validation. Also see 'setTlsextHostName'.
@@ -485,9 +486,9 @@ enableHostnameValidation ssl host =
   withCStringLen host $ \(host, hostLen) ->
     _enable_hostname_validation ssl host (fromIntegral hostLen) >>= failIf_ (/= 1)
 
-foreign import ccall "SSL_accept" _ssl_accept :: Ptr SSL_ -> IO CInt
-foreign import ccall "SSL_connect" _ssl_connect :: Ptr SSL_ -> IO CInt
-foreign import ccall unsafe "SSL_get_error" _ssl_get_error :: Ptr SSL_ -> CInt -> IO CInt
+foreign import capi "openssl/ssl.h SSL_accept" _ssl_accept :: Ptr SSL_ -> IO CInt
+foreign import capi "openssl/ssl.h SSL_connect" _ssl_connect :: Ptr SSL_ -> IO CInt
+foreign import capi unsafe "openssl/ssl.h SSL_get_error" _ssl_get_error :: Ptr SSL_ -> CInt -> IO CInt
 
 throwSSLException :: String -> CInt -> CInt -> IO a
 throwSSLException loc sslErr ret
@@ -592,8 +593,8 @@ tryConnect :: SSL -> IO (SSLResult ())
 tryConnect ssl
     = (() <$) <$> sslTryHandshake "SSL_connect" _ssl_connect ssl
 
-foreign import ccall "SSL_read" _ssl_read :: Ptr SSL_ -> Ptr Word8 -> CInt -> IO CInt
-foreign import ccall unsafe "SSL_get_shutdown" _ssl_get_shutdown :: Ptr SSL_ -> IO CInt
+foreign import capi "openssl/ssl.h SSL_read" _ssl_read :: Ptr SSL_ -> Ptr Word8 -> CInt -> IO CInt
+foreign import capi unsafe "openssl/ssl.h SSL_get_shutdown" _ssl_get_shutdown :: Ptr SSL_ -> IO CInt
 
 -- | Perform an SSL operation which operates of a buffer and can return
 --   non-blocking error codes, thus requesting that it be performed again when
@@ -653,7 +654,7 @@ tryReadPtr ssl bufPtr nBytes =
   fmap (fmap fromIntegral) (sslIOInner "SSL_read" _ssl_read (castPtr bufPtr) nBytes ssl)
 
 
-foreign import ccall "SSL_write" _ssl_write :: Ptr SSL_ -> Ptr Word8 -> CInt -> IO CInt
+foreign import capi "openssl/ssl.h SSL_write" _ssl_write :: Ptr SSL_ -> Ptr Word8 -> CInt -> IO CInt
 
 -- | Write a given ByteString to the SSL connection. Either all the data is
 --   written or an exception is raised because of an error.
@@ -709,7 +710,7 @@ lazyWrite :: SSL -> L.ByteString -> IO ()
 lazyWrite ssl lbs
     = mapM_ (write ssl) $ L.toChunks lbs
 
-foreign import ccall "SSL_shutdown" _ssl_shutdown :: Ptr SSL_ -> IO CInt
+foreign import capi "openssl/ssl.h SSL_shutdown" _ssl_shutdown :: Ptr SSL_ -> IO CInt
 
 data ShutdownType = Bidirectional  -- ^ wait for the peer to also shutdown
                   | Unidirectional  -- ^ only send our shutdown
@@ -769,9 +770,9 @@ tryShutdown ssl ty = runInBoundThread $ withSSL ssl loop
                                          return $ SSLDone ()
                            _   -> throwSSLException "SSL_shutdown" err n
 #if OPENSSL_VERSION_PREREQ(3,0)
-foreign import ccall "SSL_get1_peer_certificate" _ssl_get_peer_cert :: Ptr SSL_ -> IO (Ptr X509_)
+foreign import capi "openssl/ssl.h SSL_get1_peer_certificate" _ssl_get_peer_cert :: Ptr SSL_ -> IO (Ptr X509_)
 #else
-foreign import ccall "SSL_get_peer_certificate" _ssl_get_peer_cert :: Ptr SSL_ -> IO (Ptr X509_)
+foreign import capi "openssl/ssl.h SSL_get_peer_certificate" _ssl_get_peer_cert :: Ptr SSL_ -> IO (Ptr X509_)
 #endif
 
 -- | After a successful connection, get the certificate of the other party. If
@@ -785,7 +786,7 @@ getPeerCertificate ssl =
        then return Nothing
        else fmap Just (wrapX509 cert)
 
-foreign import ccall "SSL_get_verify_result" _ssl_get_verify_result :: Ptr SSL_ -> IO CLong
+foreign import capi "openssl/ssl.h SSL_get_verify_result" _ssl_get_verify_result :: Ptr SSL_ -> IO CLong
 
 -- | Get the result of verifing the peer's certificate. This is mostly for
 --   clients to verify the certificate of the server that they have connected

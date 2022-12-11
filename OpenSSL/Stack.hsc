@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 module OpenSSL.Stack
     ( STACK
     , mapStack
@@ -17,34 +18,34 @@ data STACK
 
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-foreign import ccall unsafe "OPENSSL_sk_new_null"
+foreign import capi unsafe "openssl/safestack.h OPENSSL_sk_new_null"
         skNewNull :: IO (Ptr STACK)
 
-foreign import ccall unsafe "OPENSSL_sk_free"
+foreign import capi unsafe "openssl/safestack.h OPENSSL_sk_free"
         skFree :: Ptr STACK -> IO ()
 
-foreign import ccall unsafe "OPENSSL_sk_push"
+foreign import capi unsafe "openssl/safestack.h OPENSSL_sk_push"
         skPush :: Ptr STACK -> Ptr () -> IO ()
 
-foreign import ccall unsafe "OPENSSL_sk_num"
+foreign import capi unsafe "openssl/safestack.h OPENSSL_sk_num"
         skNum :: Ptr STACK -> IO CInt
 
-foreign import ccall unsafe "OPENSSL_sk_value"
+foreign import capi unsafe "openssl/safestack.h OPENSSL_sk_value"
         skValue :: Ptr STACK -> CInt -> IO (Ptr ())
 #else
-foreign import ccall unsafe "sk_new_null"
+foreign import capi unsafe "openssl/safestack.h sk_new_null"
         skNewNull :: IO (Ptr STACK)
 
-foreign import ccall unsafe "sk_free"
+foreign import capi unsafe "openssl/safestack.h sk_free"
         skFree :: Ptr STACK -> IO ()
 
-foreign import ccall unsafe "sk_push"
+foreign import capi unsafe "openssl/safestack.h sk_push"
         skPush :: Ptr STACK -> Ptr () -> IO ()
 
-foreign import ccall unsafe "sk_num"
+foreign import capi unsafe "openssl/safestack.h sk_num"
         skNum :: Ptr STACK -> IO CInt
 
-foreign import ccall unsafe "sk_value"
+foreign import capi unsafe "openssl/safestack.h sk_value"
         skValue :: Ptr STACK -> CInt -> IO (Ptr ())
 #endif
 

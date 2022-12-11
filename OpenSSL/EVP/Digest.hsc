@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- |An interface to message digest algorithms.
 module OpenSSL.EVP.Digest
     ( Digest
@@ -37,7 +38,7 @@ import OpenSSL.EVP.Internal
 import OpenSSL.Objects
 import System.IO.Unsafe (unsafePerformIO)
 
-foreign import ccall unsafe "EVP_get_digestbyname"
+foreign import capi unsafe "openssl/evp.h EVP_get_digestbyname"
         _get_digestbyname :: CString -> IO (Ptr EVP_MD)
 
 -- |@'getDigestByName' name@ returns a message digest algorithm whose
@@ -79,7 +80,7 @@ digestLBS md input
 
 {- HMAC ---------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "HMAC"
+foreign import capi unsafe "openssl/hmac.h HMAC"
         _HMAC :: Ptr EVP_MD -> Ptr CChar -> CInt -> Ptr CChar -> CSize
               -> Ptr CChar -> Ptr CUInt -> IO ()
 
@@ -121,7 +122,7 @@ pkcs5_pbkdf2_hmac_sha1 pass salt iter dkeylen =
            (fromIntegral iter) (fromIntegral dkeylen) (castPtr dkeydata)
       >> return ()
 
-foreign import ccall unsafe "PKCS5_PBKDF2_HMAC_SHA1"
+foreign import capi unsafe "openssl/hmac.h PKCS5_PBKDF2_HMAC_SHA1"
   _PKCS5_PBKDF2_HMAC_SHA1 :: Ptr CChar -> CInt
                           -> Ptr CChar -> CInt
                           -> CInt -> CInt -> Ptr CChar

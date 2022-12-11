@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- |An interface to Base64 codec.
 module OpenSSL.EVP.Base64
     ( -- * Encoding
@@ -48,7 +49,7 @@ nextBlock minLen (xs, src)
 
 {- encode -------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "EVP_EncodeBlock"
+foreign import capi unsafe "openssl/evp.h EVP_EncodeBlock"
         _EncodeBlock :: Ptr CChar -> Ptr CChar -> CInt -> IO CInt
 
 
@@ -102,7 +103,7 @@ encodeBase64LBS inLBS
 
 {- decode -------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "EVP_DecodeBlock"
+foreign import capi unsafe "openssl/evp.h EVP_DecodeBlock"
         _DecodeBlock :: Ptr CChar -> Ptr CChar -> CInt -> IO CInt
 
 

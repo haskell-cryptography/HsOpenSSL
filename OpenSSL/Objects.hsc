@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 module OpenSSL.Objects
     ( ObjNameType(..)
     , getObjNames
@@ -12,15 +13,15 @@ import           Foreign.C
 
 
 type ObjName  = Ptr OBJ_NAME
-data OBJ_NAME
+data {-# CTYPE "openssl/objects.h" "OBJ_NAME" #-} OBJ_NAME
 
 type DoAllCallback = ObjName -> Ptr () -> IO ()
 
 
-foreign import ccall safe "OBJ_NAME_do_all"
+foreign import capi safe "openssl/objects.h OBJ_NAME_do_all"
         _NAME_do_all :: CInt -> FunPtr DoAllCallback -> Ptr () -> IO ()
 
-foreign import ccall safe "OBJ_NAME_do_all_sorted"
+foreign import capi safe "openssl/objects.h OBJ_NAME_do_all_sorted"
         _NAME_do_all_sorted :: CInt -> FunPtr DoAllCallback -> Ptr () -> IO ()
 
 foreign import ccall "wrapper"

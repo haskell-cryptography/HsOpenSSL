@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 {-# OPTIONS_HADDOCK prune             #-}
 -- |An interface to X.509 certificate store.
 module OpenSSL.X509.Store
@@ -43,19 +44,19 @@ import OpenSSL.Utils
 -- certificate store. The certificate store is usually used for chain
 -- verification.
 newtype X509Store  = X509Store (ForeignPtr X509_STORE)
-data    X509_STORE
+data {-# CTYPE "openssl/x509.h" "X509_STORE" #-} X509_STORE
 
 
-foreign import ccall unsafe "X509_STORE_new"
+foreign import capi unsafe "openssl/x509.h X509_STORE_new"
         _new :: IO (Ptr X509_STORE)
 
-foreign import ccall unsafe "X509_STORE_free"
+foreign import capi unsafe "openssl/x509.h X509_STORE_free"
         _free :: Ptr X509_STORE -> IO ()
 
-foreign import ccall unsafe "X509_STORE_add_cert"
+foreign import capi unsafe "openssl/x509.h X509_STORE_add_cert"
         _add_cert :: Ptr X509_STORE -> Ptr X509_ -> IO CInt
 
-foreign import ccall unsafe "X509_STORE_add_crl"
+foreign import capi unsafe "openssl/x509.h X509_STORE_add_crl"
         _add_crl :: Ptr X509_STORE -> Ptr X509_CRL -> IO CInt
 
 -- |@'newX509Store'@ creates an empty X.509 certificate store.
@@ -92,30 +93,30 @@ addCRLToStore store crl
            >>= failIf (/= 1)
            >>  return ()
 
-data    X509_STORE_CTX
+data {-# CTYPE "openssl/x509.h" "X509_STORE_CTX" #-} X509_STORE_CTX
 newtype X509StoreCtx = X509StoreCtx (ForeignPtr X509_STORE_CTX)
 
-foreign import ccall unsafe "X509_STORE_CTX_get_current_cert"
+foreign import capi unsafe "openssl/x509.h X509_STORE_CTX_get_current_cert"
   _store_ctx_get_current_cert :: Ptr X509_STORE_CTX -> IO (Ptr X509_)
 
-foreign import ccall unsafe "HsOpenSSL_X509_STORE_CTX_get0_current_issuer"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_STORE_CTX_get0_current_issuer"
   _store_ctx_get0_current_issuer :: Ptr X509_STORE_CTX -> IO (Ptr X509_)
 
-foreign import ccall unsafe "HsOpenSSL_X509_STORE_CTX_get0_current_crl"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_STORE_CTX_get0_current_crl"
   _store_ctx_get0_current_crl :: Ptr X509_STORE_CTX -> IO (Ptr X509_CRL)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-foreign import ccall unsafe "X509_STORE_CTX_get1_chain"
+foreign import capi unsafe "openssl/x509.h X509_STORE_CTX_get1_chain"
   _store_ctx_get_chain :: Ptr X509_STORE_CTX -> IO (Ptr STACK)
 #else
-foreign import ccall unsafe "X509_STORE_CTX_get_chain"
+foreign import capi unsafe "openssl/x509.h X509_STORE_CTX_get_chain"
   _store_ctx_get_chain :: Ptr X509_STORE_CTX -> IO (Ptr STACK)
 #endif
 
-foreign import ccall unsafe "HsOpenSSL_X509_ref"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_ref"
   _x509_ref :: Ptr X509_ -> IO ()
 
-foreign import ccall unsafe "HsOpenSSL_X509_CRL_ref"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_CRL_ref"
   _crl_ref :: Ptr X509_CRL -> IO ()
 
 withX509StoreCtxPtr :: X509StoreCtx -> (Ptr X509_STORE_CTX -> IO a) -> IO a

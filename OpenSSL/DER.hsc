@@ -1,4 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI #-}
 -- |Encoding and decoding of RSA keys using the ASN.1 DER format
 module OpenSSL.DER
     ( toDERPub
@@ -17,27 +18,26 @@ import           OpenSSL.RSA                (RSA, RSAKey, RSAKeyPair, RSAPubKey,
 import           Data.ByteString            (ByteString)
 import qualified Data.ByteString            as B  (useAsCStringLen)
 import qualified Data.ByteString.Internal   as BI (createAndTrim)
-import           Foreign.Ptr                (Ptr, nullPtr)
-import           Foreign.C.String           (CString)
+import           Foreign.Ptr                (Ptr, nullPtr, castPtr)
 import           Foreign.C.Types            (CLong(..), CInt(..))
 import           Foreign.Marshal.Alloc      (alloca)
 import           Foreign.Storable           (poke)
 import           GHC.Word                   (Word8)
 import           System.IO.Unsafe           (unsafePerformIO)
 
-type CDecodeFun = Ptr (Ptr RSA) -> Ptr CString -> CLong -> IO (Ptr RSA)
+type CDecodeFun = Ptr (Ptr RSA) -> Ptr (Ptr Word8) -> CLong -> IO (Ptr RSA)
 type CEncodeFun = Ptr RSA -> Ptr (Ptr Word8) -> IO CInt
 
-foreign import ccall unsafe "d2i_RSAPublicKey"
+foreign import capi unsafe "HsOpenSSL.h d2i_RSAPublicKey"
   _fromDERPub :: CDecodeFun
 
-foreign import ccall unsafe "i2d_RSAPublicKey"
+foreign import capi unsafe "HsOpenSSL.h i2d_RSAPublicKey"
   _toDERPub :: CEncodeFun
 
-foreign import ccall unsafe "d2i_RSAPrivateKey"
+foreign import capi unsafe "HsOpenSSL.h d2i_RSAPrivateKey"
   _fromDERPriv :: CDecodeFun
 
-foreign import ccall unsafe "i2d_RSAPrivateKey"
+foreign import capi unsafe "HsOpenSSL.h i2d_RSAPrivateKey"
   _toDERPriv :: CEncodeFun
 
 -- | Generate a function that decodes a key from ASN.1 DER format
@@ -47,7 +47,10 @@ makeDecodeFun fun bs = unsafePerformIO . usingConvedBS $ \(csPtr, ci) -> do
   -- space required for the RSA key all by itself.  It will be freed whenever
   -- the haskell object is garbage collected, as they are stored in ForeignPtrs
   -- internally.
-  rsaPtr <- fun nullPtr csPtr ci
+  rsaPtr <- fun nullPtr (castPtr csPtr) ci
+  -- CString is represented as a void* in C and the C compiler whines about
+  -- a bad pointer conversion in d2i_* functions. So we declare
+  -- the CDecodeFun to accept Ptr Word8 and perform the castPtr here.
   if rsaPtr == nullPtr then return Nothing else absorbRSAPtr rsaPtr
   where usingConvedBS io = B.useAsCStringLen bs $ \(cs, len) ->
           alloca $ \csPtr -> poke csPtr cs >> io (csPtr, fromIntegral len)

@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI #-}
 module OpenSSL.ASN1
     ( ASN1_OBJECT
     , obj2nid
@@ -36,15 +37,15 @@ import System.Locale
 
 {- ASN1_OBJECT --------------------------------------------------------------- -}
 
-data ASN1_OBJECT
+data {-# CTYPE "openssl/asn1.h" "ASN1_OBJECT" #-} ASN1_OBJECT
 
-foreign import ccall unsafe "OBJ_obj2nid"
+foreign import capi unsafe "openssl/objects.h OBJ_obj2nid"
         obj2nid :: Ptr ASN1_OBJECT -> IO CInt
 
-foreign import ccall unsafe "OBJ_nid2sn"
+foreign import capi unsafe "openssl/objects.h OBJ_nid2sn"
         _nid2sn :: CInt -> IO CString
 
-foreign import ccall unsafe "OBJ_nid2ln"
+foreign import capi unsafe "openssl/objects.h OBJ_nid2ln"
         _nid2ln :: CInt -> IO CString
 
 
@@ -58,7 +59,7 @@ nid2ln nid = _nid2ln nid >>= peekCString
 
 {- ASN1_STRING --------------------------------------------------------------- -}
 
-data ASN1_STRING
+data {-# CTYPE "openssl/asn1.h" "ASN1_STRING" #-} ASN1_STRING
 
 peekASN1String :: Ptr ASN1_STRING -> IO String
 peekASN1String strPtr
@@ -69,18 +70,18 @@ peekASN1String strPtr
 
 {- ASN1_INTEGER -------------------------------------------------------------- -}
 
-data ASN1_INTEGER
+data {-# CTYPE "openssl/asn1.h" "ASN1_INTEGER" #-} ASN1_INTEGER
 
-foreign import ccall unsafe "HsOpenSSL_M_ASN1_INTEGER_new"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_M_ASN1_INTEGER_new"
         _ASN1_INTEGER_new :: IO (Ptr ASN1_INTEGER)
 
-foreign import ccall unsafe "HsOpenSSL_M_ASN1_INTEGER_free"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_M_ASN1_INTEGER_free"
         _ASN1_INTEGER_free :: Ptr ASN1_INTEGER -> IO ()
 
-foreign import ccall unsafe "ASN1_INTEGER_to_BN"
+foreign import capi unsafe "openssl/asn1.h ASN1_INTEGER_to_BN"
         _ASN1_INTEGER_to_BN :: Ptr ASN1_INTEGER -> Ptr BIGNUM -> IO (Ptr BIGNUM)
 
-foreign import ccall unsafe "BN_to_ASN1_INTEGER"
+foreign import capi unsafe "openssl/asn1.h BN_to_ASN1_INTEGER"
         _BN_to_ASN1_INTEGER :: Ptr BIGNUM -> Ptr ASN1_INTEGER -> IO (Ptr ASN1_INTEGER)
 
 
@@ -108,18 +109,18 @@ withASN1Integer int m
 
 {- ASN1_TIME ---------------------------------------------------------------- -}
 
-data ASN1_TIME
+data {-# CTYPE "openssl/asn1.h" "ASN1_TIME" #-} ASN1_TIME
 
-foreign import ccall unsafe "HsOpenSSL_M_ASN1_TIME_new"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_M_ASN1_TIME_new"
         _ASN1_TIME_new :: IO (Ptr ASN1_TIME)
 
-foreign import ccall unsafe "HsOpenSSL_M_ASN1_TIME_free"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_M_ASN1_TIME_free"
         _ASN1_TIME_free :: Ptr ASN1_TIME -> IO ()
 
-foreign import ccall unsafe "ASN1_TIME_set"
+foreign import capi unsafe "openssl/asn1.h ASN1_TIME_set"
         _ASN1_TIME_set :: Ptr ASN1_TIME -> CTime -> IO (Ptr ASN1_TIME)
 
-foreign import ccall unsafe "ASN1_TIME_print"
+foreign import capi unsafe "openssl/asn1.h ASN1_TIME_print"
         _ASN1_TIME_print :: Ptr BIO_ -> Ptr ASN1_TIME -> IO CInt
 
 
@@ -130,7 +131,7 @@ peekASN1Time time
              _ASN1_TIME_print bioPtr time
                   >>= failIf_ (/= 1)
          timeStr <- bioRead bio
-#if MIN_VERSION_time(1,5,0)	       
+#if MIN_VERSION_time(1,5,0)
          case parseTimeM True defaultTimeLocale "%b %e %H:%M:%S %Y %Z" timeStr of
 #else
          case parseTime defaultTimeLocale "%b %e %H:%M:%S %Y %Z" timeStr of

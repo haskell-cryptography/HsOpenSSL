@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable       #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI #-}
 -- |Message verification using asymmetric cipher and message digest
 -- algorithm. This is an opposite of "OpenSSL.EVP.Sign".
 module OpenSSL.EVP.Verify
@@ -26,7 +27,7 @@ data VerifyStatus = VerifySuccess
                     deriving (Show, Eq, Typeable)
 
 
-foreign import ccall unsafe "EVP_VerifyFinal"
+foreign import capi unsafe "openssl/evp.h EVP_VerifyFinal"
         _VerifyFinal :: Ptr EVP_MD_CTX -> Ptr CChar -> CUInt -> Ptr EVP_PKEY -> IO CInt
 
 

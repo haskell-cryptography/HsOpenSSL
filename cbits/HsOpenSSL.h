@@ -61,6 +61,8 @@ int HsOpenSSL_BIO_FLAGS_BASE64_NO_NL();
 
 /* DH *************************************************************************/
 DH* HsOpenSSL_DHparams_dup(DH* dh);
+const BIGNUM *HsOpenSSL_DH_get_pub_key(DH *dh);
+int HsOpenSSL_DH_length(DH *dh);
 
 /* EVP ************************************************************************/
 int HsOpenSSL_EVP_MD_size(EVP_MD* md);
@@ -84,6 +86,10 @@ const ASN1_TIME* HsOpenSSL_X509_CRL_get_lastUpdate(const X509_CRL* crl);
 const ASN1_TIME* HsOpenSSL_X509_CRL_get_nextUpdate(const X509_CRL* crl);
 X509_NAME* HsOpenSSL_X509_CRL_get_issuer(X509_CRL* crl);
 STACK_OF(X509_REVOKED)* HsOpenSSL_X509_CRL_get_REVOKED(X509_CRL* crl);
+void HsOpenSSL_X509_ref(X509* x509);
+void HsOpenSSL_X509_CRL_ref(X509_CRL* crl);
+X509* HsOpenSSL_X509_STORE_CTX_get0_current_issuer(X509_STORE_CTX *ctx);
+X509_CRL* HsOpenSSL_X509_STORE_CTX_get0_current_crl(X509_STORE_CTX *ctx);
 
 /* PKCS#7 *********************************************************************/
 long HsOpenSSL_PKCS7_is_detached(PKCS7* pkcs7);

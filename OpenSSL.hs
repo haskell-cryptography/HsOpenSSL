@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- |HsOpenSSL is an OpenSSL binding for Haskell. It can generate RSA
 -- and DSA keys, read and write PEM files, generate message digests,
 -- sign and verify messages, encrypt and decrypt messages.
@@ -52,10 +53,10 @@ import System.IO.Unsafe
 import Control.Exception (onException, mask_)
 #endif
 
-foreign import ccall "HsOpenSSL_init"
+foreign import capi "HsOpenSSL.h HsOpenSSL_init"
         initSSL :: IO ()
 
-foreign import ccall "HsOpenSSL_setupMutex"
+foreign import capi "HsOpenSSL.h HsOpenSSL_setupMutex"
         setupMutex :: IO ()
 
 

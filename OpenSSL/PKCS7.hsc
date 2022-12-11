@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable       #-}
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 {-# OPTIONS_HADDOCK prune             #-}
 -- |An interface to PKCS#7 structure and S\/MIME message.
 module OpenSSL.PKCS7
@@ -46,7 +47,7 @@ import           OpenSSL.X509.Store
 -- very haskellish but please get it out of your mind since OpenSSL is
 -- written in C.
 newtype Pkcs7 = Pkcs7 (ForeignPtr PKCS7)
-data    PKCS7
+data {-# CTYPE "openssl/pkcs7.h" "PKCS7" #-} PKCS7
 
 -- |@'Pkcs7Flag'@ is a set of flags that are used in many operations
 -- related to PKCS#7.
@@ -93,22 +94,22 @@ flagListToInt :: [Pkcs7Flag] -> CInt
 flagListToInt = foldl' (.|.) 0 . map flagToInt
 
 
-foreign import ccall "&PKCS7_free"
+foreign import capi "openssl/pkcs7.h &PKCS7_free"
         _free :: FunPtr (Ptr PKCS7 -> IO ())
 
-foreign import ccall "HsOpenSSL_PKCS7_is_detached"
+foreign import capi "HsOpenSSL.h HsOpenSSL_PKCS7_is_detached"
         _is_detached :: Ptr PKCS7 -> IO CLong
 
-foreign import ccall "PKCS7_sign"
+foreign import capi "openssl/pkcs7.h PKCS7_sign"
         _sign :: Ptr X509_ -> Ptr EVP_PKEY -> Ptr STACK -> Ptr BIO_ -> CInt -> IO (Ptr PKCS7)
 
-foreign import ccall "PKCS7_verify"
+foreign import capi "openssl/pkcs7.h PKCS7_verify"
         _verify :: Ptr PKCS7 -> Ptr STACK -> Ptr X509_STORE -> Ptr BIO_ -> Ptr BIO_ -> CInt -> IO CInt
 
-foreign import ccall "PKCS7_encrypt"
+foreign import capi "openssl/pkcs7.h PKCS7_encrypt"
         _encrypt :: Ptr STACK -> Ptr BIO_ -> Ptr EVP_CIPHER -> CInt -> IO (Ptr PKCS7)
 
-foreign import ccall "PKCS7_decrypt"
+foreign import capi "openssl/pkcs7.h PKCS7_decrypt"
         _decrypt :: Ptr PKCS7 -> Ptr EVP_PKEY -> Ptr X509_ -> Ptr BIO_ -> CInt -> IO CInt
 
 
@@ -146,7 +147,7 @@ pkcs7Sign :: KeyPair key =>
                          --   chain)
           -> String      -- ^ data to be signed
           -> [Pkcs7Flag] -- ^ An optional set of flags:
-                         -- 
+                         --
                          --   ['Pkcs7Text'] Many S\/MIME clients
                          --   expect the signed content to include
                          --   valid MIME headers. If the 'Pkcs7Text'
@@ -230,7 +231,7 @@ pkcs7Verify :: Pkcs7           -- ^ A PKCS#7 structure to verify.
                                --   present in the PKCS#7 structure
                                --   (that is it is detached).
             -> [Pkcs7Flag]     -- ^ An optional set of flags:
-                               -- 
+                               --
                                --   ['Pkcs7NoIntern'] If
                                --   'Pkcs7NoIntern' is set the
                                --   certificates in the message itself
@@ -344,10 +345,10 @@ pkcs7Decrypt pkcs7 pkey cert flagList
 
 {- S/MIME -------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "SMIME_write_PKCS7"
+foreign import capi unsafe "openssl/pkcs7.h SMIME_write_PKCS7"
         _SMIME_write_PKCS7 :: Ptr BIO_ -> Ptr PKCS7 -> Ptr BIO_ -> CInt -> IO CInt
 
-foreign import ccall unsafe "SMIME_read_PKCS7"
+foreign import capi unsafe "openssl/pkcs7.h SMIME_read_PKCS7"
         _SMIME_read_PKCS7 :: Ptr BIO_ -> Ptr (Ptr BIO_) -> IO (Ptr PKCS7)
 
 -- |@'writeSmime'@ writes PKCS#7 structure to S\/MIME message.

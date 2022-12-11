@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable       #-}
 {-# LANGUAGE EmptyDataDecls           #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 {-# OPTIONS_HADDOCK prune             #-}
 -- |An interface to Certificate Revocation List.
 module OpenSSL.X509.Revocation
@@ -61,8 +62,8 @@ import OpenSSL.X509.Name
 -- |@'CRL'@ is an opaque object that represents Certificate Revocation
 -- List.
 newtype CRL          = CRL (ForeignPtr X509_CRL)
-data    X509_CRL
-data    X509_REVOKED
+data {-# CTYPE "openssl/x509.h" "X509_CRL" #-} X509_CRL
+data {-# CTYPE "openssl/x509.h" "X509_REVOKED" #-} X509_REVOKED
 
 -- |@'RevokedCertificate'@ represents a revoked certificate in a
 -- list. Each certificates are supposed to be distinguishable by
@@ -76,81 +77,81 @@ data RevokedCertificate
     deriving (Show, Eq, Typeable)
 
 
-foreign import ccall unsafe "X509_CRL_new"
+foreign import capi unsafe "openssl/x509.h X509_CRL_new"
         _new :: IO (Ptr X509_CRL)
 
-foreign import ccall unsafe "&X509_CRL_free"
+foreign import capi unsafe "openssl/x509.h &X509_CRL_free"
         _free :: FunPtr (Ptr X509_CRL -> IO ())
 
-foreign import ccall unsafe "X509_CRL_sign"
+foreign import capi unsafe "openssl/x509.h X509_CRL_sign"
         _sign :: Ptr X509_CRL -> Ptr EVP_PKEY -> Ptr EVP_MD -> IO CInt
 
-foreign import ccall unsafe "X509_CRL_verify"
+foreign import capi unsafe "openssl/x509.h X509_CRL_verify"
         _verify :: Ptr X509_CRL -> Ptr EVP_PKEY -> IO CInt
 
-foreign import ccall unsafe "X509_CRL_print"
+foreign import capi unsafe "openssl/x509.h X509_CRL_print"
         _print :: Ptr BIO_ -> Ptr X509_CRL -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_X509_CRL_get_version"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_CRL_get_version"
         _get_version :: Ptr X509_CRL -> IO CLong
 
-foreign import ccall unsafe "X509_CRL_set_version"
+foreign import capi unsafe "openssl/x509.h X509_CRL_set_version"
         _set_version :: Ptr X509_CRL -> CLong -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_X509_CRL_get_lastUpdate"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_CRL_get_lastUpdate"
         _get_lastUpdate :: Ptr X509_CRL -> IO (Ptr ASN1_TIME)
 
-foreign import ccall unsafe "HsOpenSSL_X509_CRL_get_nextUpdate"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_CRL_get_nextUpdate"
         _get_nextUpdate :: Ptr X509_CRL -> IO (Ptr ASN1_TIME)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-foreign import ccall unsafe "X509_CRL_set1_lastUpdate"
+foreign import capi unsafe "openssl/x509.h X509_CRL_set1_lastUpdate"
         _set_lastUpdate :: Ptr X509_CRL -> Ptr ASN1_TIME -> IO CInt
 
-foreign import ccall unsafe "X509_CRL_set1_nextUpdate"
+foreign import capi unsafe "openssl/x509.h X509_CRL_set1_nextUpdate"
         _set_nextUpdate :: Ptr X509_CRL -> Ptr ASN1_TIME -> IO CInt
 #else
-foreign import ccall unsafe "X509_CRL_set_lastUpdate"
+foreign import capi unsafe "openssl/x509.h X509_CRL_set_lastUpdate"
         _set_lastUpdate :: Ptr X509_CRL -> Ptr ASN1_TIME -> IO CInt
 
-foreign import ccall unsafe "X509_CRL_set_nextUpdate"
+foreign import capi unsafe "openssl/x509.h X509_CRL_set_nextUpdate"
         _set_nextUpdate :: Ptr X509_CRL -> Ptr ASN1_TIME -> IO CInt
 #endif
 
-foreign import ccall unsafe "HsOpenSSL_X509_CRL_get_issuer"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_CRL_get_issuer"
         _get_issuer_name :: Ptr X509_CRL -> IO (Ptr X509_NAME)
 
-foreign import ccall unsafe "X509_CRL_set_issuer_name"
+foreign import capi unsafe "openssl/x509.h X509_CRL_set_issuer_name"
         _set_issuer_name :: Ptr X509_CRL -> Ptr X509_NAME -> IO CInt
 
-foreign import ccall unsafe "HsOpenSSL_X509_CRL_get_REVOKED"
+foreign import capi unsafe "HsOpenSSL.h HsOpenSSL_X509_CRL_get_REVOKED"
         _get_REVOKED :: Ptr X509_CRL -> IO (Ptr STACK)
 
-foreign import ccall unsafe "X509_CRL_add0_revoked"
+foreign import capi unsafe "openssl/x509.h X509_CRL_add0_revoked"
         _add0_revoked :: Ptr X509_CRL -> Ptr X509_REVOKED -> IO CInt
 
 #if OPENSSL_VERSION_NUMBER >= 0x10000000
 -- This function is only available on OpenSSL 1.0.0 or later.
-foreign import ccall unsafe "X509_CRL_get0_by_serial"
+foreign import capi unsafe "openssl/x509.h X509_CRL_get0_by_serial"
         _get0_by_serial :: Ptr X509_CRL -> Ptr (Ptr X509_REVOKED)
                         -> Ptr ASN1_INTEGER -> IO CInt
 #endif
 
-foreign import ccall unsafe "X509_CRL_sort"
+foreign import capi unsafe "openssl/x509.h X509_CRL_sort"
         _sort :: Ptr X509_CRL -> IO CInt
 
 
 
-foreign import ccall unsafe "X509_REVOKED_new"
+foreign import capi unsafe "openssl/x509.h X509_REVOKED_new"
         _new_revoked :: IO (Ptr X509_REVOKED)
 
-foreign import ccall unsafe "X509_REVOKED_free"
+foreign import capi unsafe "openssl/x509.h X509_REVOKED_free"
         freeRevoked :: Ptr X509_REVOKED -> IO ()
 
-foreign import ccall unsafe "X509_REVOKED_set_serialNumber"
+foreign import capi unsafe "openssl/x509.h X509_REVOKED_set_serialNumber"
         _set_serialNumber :: Ptr X509_REVOKED -> Ptr ASN1_INTEGER -> IO CInt
 
-foreign import ccall unsafe "X509_REVOKED_set_revocationDate"
+foreign import capi unsafe "openssl/x509.h X509_REVOKED_set_revocationDate"
         _set_revocationDate :: Ptr X509_REVOKED -> Ptr ASN1_TIME -> IO CInt
 
 -- |@'newCRL'@ creates an empty revocation list. You must set the
@@ -302,10 +303,10 @@ getRevocationDate :: Ptr X509_REVOKED -> IO (Ptr ASN1_TIME)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 
-foreign import ccall unsafe "X509_REVOKED_get0_serialNumber"
+foreign import capi unsafe "openssl/x509.h X509_REVOKED_get0_serialNumber"
         _get0_serialNumber :: Ptr X509_REVOKED -> IO (Ptr ASN1_INTEGER)
 
-foreign import ccall unsafe "X509_REVOKED_get0_revocationDate"
+foreign import capi unsafe "openssl/x509.h X509_REVOKED_get0_revocationDate"
         _get0_revocationDate :: Ptr X509_REVOKED -> IO (Ptr ASN1_TIME)
 
 getSerialNumber = _get0_serialNumber

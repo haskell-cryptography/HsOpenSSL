@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                      #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE CApiFFI                  #-}
 -- |An interface to PEM routines.
 module OpenSSL.PEM
     ( -- * Password supply
@@ -130,7 +131,7 @@ callPasswordCB cb buf bufLen rwflag _
 
 {- PKCS#8 -------------------------------------------------------------------- -}
 
-foreign import ccall safe "PEM_write_bio_PKCS8PrivateKey"
+foreign import capi safe "openssl/pem.h PEM_write_bio_PKCS8PrivateKey"
         _write_bio_PKCS8PrivateKey :: Ptr BIO_
                                    -> Ptr EVP_PKEY
                                    -> Ptr EVP_CIPHER
@@ -167,7 +168,7 @@ writePKCS8PrivateKey' bio key encryption
                       -> withCipherPtr cipher $ \ cipherPtr ->
                          bracket (mkPemPasswordCallback $ callPasswordCB cb) freeHaskellFunPtr $ \cbPtr ->
                          _write_bio_PKCS8PrivateKey bioPtr pkeyPtr cipherPtr nullPtr 0 cbPtr nullPtr
-               
+
                   Just (cipher, PwTTY)
                       -> withCipherPtr cipher $ \ cipherPtr ->
                          _write_bio_PKCS8PrivateKey bioPtr pkeyPtr cipherPtr nullPtr 0 nullFunPtr nullPtr
@@ -191,7 +192,7 @@ writePKCS8PrivateKey pkey encryption
          bioRead mem
 
 
-foreign import ccall safe "PEM_read_bio_PrivateKey"
+foreign import capi safe "openssl/pem.h PEM_read_bio_PrivateKey"
         _read_bio_PrivateKey :: Ptr BIO_
                              -> Ptr (Ptr EVP_PKEY)
                              -> FunPtr PemPasswordCallback'
@@ -215,7 +216,7 @@ readPrivateKey' bio supply
                           -> bracket (mkPemPasswordCallback $ callPasswordCB cb) freeHaskellFunPtr $ \cbPtr ->
                              _read_bio_PrivateKey bioPtr nullPtr cbPtr nullPtr
                       PwTTY
-                          -> _read_bio_PrivateKey bioPtr nullPtr nullFunPtr nullPtr 
+                          -> _read_bio_PrivateKey bioPtr nullPtr nullFunPtr nullPtr
          failIfNull_ pkeyPtr
          fmap fromJust (wrapPKeyPtr pkeyPtr >>= fromPKey)
 
@@ -228,10 +229,10 @@ readPrivateKey pemStr supply
 
 {- Public Key ---------------------------------------------------------------- -}
 
-foreign import ccall unsafe "PEM_write_bio_PUBKEY"
+foreign import capi unsafe "openssl/pem.h PEM_write_bio_PUBKEY"
         _write_bio_PUBKEY :: Ptr BIO_ -> Ptr EVP_PKEY -> IO CInt
 
-foreign import ccall unsafe "PEM_read_bio_PUBKEY"
+foreign import capi unsafe "openssl/pem.h PEM_read_bio_PUBKEY"
         _read_bio_PUBKEY :: Ptr BIO_
                          -> Ptr (Ptr EVP_PKEY)
                          -> FunPtr PemPasswordCallback'
@@ -273,12 +274,12 @@ readPublicKey pemStr
 
 {- X.509 certificate --------------------------------------------------------- -}
 
-foreign import ccall unsafe "PEM_write_bio_X509"
+foreign import capi unsafe "openssl/pem.h PEM_write_bio_X509"
         _write_bio_X509 :: Ptr BIO_
                         -> Ptr X509_
                         -> IO CInt
 
-foreign import ccall safe "PEM_read_bio_X509"
+foreign import capi safe "openssl/pem.h PEM_read_bio_X509"
         _read_bio_X509 :: Ptr BIO_
                        -> Ptr (Ptr X509_)
                        -> FunPtr PemPasswordCallback'
@@ -318,17 +319,17 @@ readX509 pemStr
 
 {- PKCS#10 certificate request ----------------------------------------------- -}
 
-foreign import ccall unsafe "PEM_write_bio_X509_REQ"
+foreign import capi unsafe "openssl/pem.h PEM_write_bio_X509_REQ"
         _write_bio_X509_REQ :: Ptr BIO_
                             -> Ptr X509_REQ
                             -> IO CInt
 
-foreign import ccall unsafe "PEM_write_bio_X509_REQ_NEW"
+foreign import capi unsafe "openssl/pem.h PEM_write_bio_X509_REQ_NEW"
         _write_bio_X509_REQ_NEW :: Ptr BIO_
                                 -> Ptr X509_REQ
                                 -> IO CInt
 
-foreign import ccall safe "PEM_read_bio_X509_REQ"
+foreign import capi safe "openssl/pem.h PEM_read_bio_X509_REQ"
         _read_bio_X509_REQ :: Ptr BIO_
                            -> Ptr (Ptr X509_REQ)
                            -> FunPtr PemPasswordCallback'
@@ -383,12 +384,12 @@ readX509Req pemStr
 
 {- Certificate Revocation List ----------------------------------------------- -}
 
-foreign import ccall unsafe "PEM_write_bio_X509_CRL"
+foreign import capi unsafe "openssl/pem.h PEM_write_bio_X509_CRL"
         _write_bio_X509_CRL :: Ptr BIO_
                             -> Ptr X509_CRL
                             -> IO CInt
 
-foreign import ccall safe "PEM_read_bio_X509_CRL"
+foreign import capi safe "openssl/pem.h PEM_read_bio_X509_CRL"
         _read_bio_X509_CRL :: Ptr BIO_
                            -> Ptr (Ptr X509_CRL)
                            -> FunPtr PemPasswordCallback'
@@ -429,12 +430,12 @@ readCRL pemStr
 
 {- PKCS#7 -------------------------------------------------------------------- -}
 
-foreign import ccall unsafe "PEM_write_bio_PKCS7"
+foreign import capi unsafe "openssl/pem.h PEM_write_bio_PKCS7"
         _write_bio_PKCS7 :: Ptr BIO_
                          -> Ptr PKCS7
                          -> IO CInt
 
-foreign import ccall safe "PEM_read_bio_PKCS7"
+foreign import capi safe "openssl/pem.h PEM_read_bio_PKCS7"
         _read_bio_PKCS7 :: Ptr BIO_
                         -> Ptr (Ptr PKCS7)
                         -> FunPtr PemPasswordCallback'
@@ -473,12 +474,12 @@ readPkcs7 pemStr
 
 {- DH parameters ------------------------------------------------------------- -}
 
-foreign import ccall unsafe "PEM_write_bio_DHparams"
+foreign import capi unsafe "openssl/pem.h PEM_write_bio_DHparams"
         _write_bio_DH :: Ptr BIO_
                       -> Ptr DH_
                       -> IO CInt
 
-foreign import ccall safe "PEM_read_bio_DHparams"
+foreign import capi safe "openssl/pem.h PEM_read_bio_DHparams"
         _read_bio_DH :: Ptr BIO_
                      -> Ptr (Ptr DH_)
                      -> FunPtr PemPasswordCallback'
@@ -518,4 +519,4 @@ withBS passStr act =
   flip finally (memset passPtr 0 $ fromIntegral passLen) $
   act (castPtr passPtr, passLen)
 
-foreign import ccall unsafe memset :: Ptr a -> CInt -> CSize -> IO ()
+foreign import capi unsafe "string.h memset" memset :: Ptr a -> CInt -> CSize -> IO ()
