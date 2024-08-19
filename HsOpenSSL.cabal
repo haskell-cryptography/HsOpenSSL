@@ -10,7 +10,7 @@ Description:
     systems and stable. You may also be interested in the @tls@ package,
     <http://hackage.haskell.org/package/tls>, which is a pure Haskell
     implementation of SSL.
-Version:       0.11.7.7
+Version:       0.11.7.8
 License:       PublicDomain
 License-File:  COPYING
 Author:        Adam Langley, Mikhail Vorozhtsov, PHO, Taru Karttunen
