@@ -89,8 +89,10 @@ clean: clean-hook
 
 clean-hook:
 
-doc: setup-config
-	./Setup haddock $(HADDOCK_OPTS)
+doc:
+	rm -rf haddocks
+	cabal haddock-project --hackage
+# then go to ./haddocks, rename -internal to -docs, tar and upload
 
 install: build
 	$(SUDO) ./Setup install
