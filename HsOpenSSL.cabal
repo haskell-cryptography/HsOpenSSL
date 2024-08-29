@@ -21,7 +21,18 @@ Bug-Reports:   https://github.com/haskell-cryptography/HsOpenSSL/issues
 Category:      Cryptography
 Cabal-Version: 1.12
 Tested-With:
-    GHC==8.8.1, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2, GHC==8.0.2, GHC==7.10.3
+    GHC ==8.0.2
+     || ==8.2.2
+     || ==8.4.4
+     || ==8.6.5
+     || ==8.8.4
+     || ==8.10.7
+     || ==9.0.2
+     || ==9.2.8
+     || ==9.4.8
+     || ==9.6.6
+     || ==9.8.1
+     || ==9.10.1
 Build-Type:    Custom
 Extra-Source-Files:
     AUTHORS

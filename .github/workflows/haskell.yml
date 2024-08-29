@@ -15,9 +15,39 @@ jobs:
         # number instances is a good way to trigger flaky build failures
         n: [1]
 
-        ghc: ["8.10.7"]
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        ghc:
+        - "8.0.2"
+        - "8.2.2"
+        - "8.4.4"
+        - "8.6.5"
+        - "8.8.4"
+        - "8.10.7"
+        - "9.0.2"
+        - "9.2.8"
+        - "9.4.8"
+        - "9.6.6"
+        - "9.8.2"
+        - "9.10.1"
+        # FIXME: Add windows-latest back to CI once it is passing.
+        os: [ubuntu-latest, macos-latest]
 
+        # Action fails to install GHC < 8.10 on OSX with a generic error
+        # messsage:
+        #
+        #   Error: All install methods for ghc 8.0.2 failed
+        #
+        # On the other hand, 8.10 and 9.0 fail due to LLVM:
+        #
+        #   Warning: Couldn't figure out LLVM version!
+        #            Make sure you have installed LLVM between [9 and 13)
+        exclude:
+          - {ghc: "8.0.2", os: "macos-latest"}
+          - {ghc: "8.2.2", os: "macos-latest"}
+          - {ghc: "8.4.4", os: "macos-latest"}
+          - {ghc: "8.6.5", os: "macos-latest"}
+          - {ghc: "8.8.4", os: "macos-latest"}
+          - {ghc: "8.10.7", os: "macos-latest"}
+          - {ghc: "9.0.2", os: "macos-latest"}
     env:
       # OpenSSL is installed in a non-standard location in MacOS. See
       # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-latest-Readme.md
@@ -27,6 +57,10 @@ jobs:
       LD_LIBRARY_PATH: ${{ (matrix.os != 'windows-latest' && '/usr/local/lib') || '' }}
 
     steps:
+    - uses: haskell-actions/setup@v2
+      with:
+        ghc-version: ${{ matrix.ghc }}
+
     - name: "WIN: Install System Dependencies via pacman (msys2)"
       if: runner.os == 'Windows'
       run: |
@@ -45,7 +79,8 @@ jobs:
     # this seems to break something. It _must_ come after the pacman setup
     # above. It appears as if PATHEXT is set _after_ ghcup install ghc/cabal, and
     # as such we'd need pacman.exe instead.
-    - name: Setup Haskell
+    - name: "WIN: Setup Haskell"
+      if: runner.os == 'Windows'
       run: |
         # Use GHCUP to manage ghc/cabal
         ghcup install ghc --set ${{ matrix.ghc }}
