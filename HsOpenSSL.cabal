@@ -99,11 +99,15 @@ Library
         Build-Depends: integer-gmp >= 1.0.0 && < 1.1.0
 
     if os(darwin) && flag(homebrew-openssl)
-        Include-Dirs: /usr/local/opt/openssl/include
-        Extra-Lib-Dirs: /usr/local/opt/openssl/lib
+        if arch(aarch64)
+            Include-Dirs:   /opt/homebrew/opt/openssl/include
+            Extra-Lib-Dirs: /opt/homebrew/opt/openssl/lib
+        else
+            Include-Dirs:   /usr/local/opt/openssl/include
+            Extra-Lib-Dirs: /usr/local/opt/openssl/lib
 
     if os(darwin) && flag(macports-openssl)
-        Include-Dirs: /opt/local/include
+        Include-Dirs:   /opt/local/include
         Extra-Lib-Dirs: /opt/local/lib
 
     if flag(use-pkg-config)
