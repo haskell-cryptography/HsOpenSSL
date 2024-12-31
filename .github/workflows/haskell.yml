@@ -52,7 +52,7 @@ jobs:
       # OpenSSL is installed in a non-standard location in MacOS. See
       # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-latest-Readme.md
       PKG_CONFIG_PATH: ${{ (matrix.os == 'macos-latest' && '/usr/lib/pkgconfig:/usr/local/opt/openssl@1.1/lib/pkgconfig') || (matrix.os == 'ubuntu-latest' && '/usr/lib/pkgconfig:/usr/local/lib/pkgconfig') || '' }}
-      
+
       # FIXME: this is arguably a bug, and pkg-config should return the right values!
       LD_LIBRARY_PATH: ${{ (matrix.os != 'windows-latest' && '/usr/local/lib') || '' }}
 
@@ -75,7 +75,7 @@ jobs:
             automake `
             libtool `
             make
-  
+
     # this seems to break something. It _must_ come after the pacman setup
     # above. It appears as if PATHEXT is set _after_ ghcup install ghc/cabal, and
     # as such we'd need pacman.exe instead.
@@ -127,7 +127,7 @@ jobs:
       shell: bash
       run: echo '${{ steps.cabal-store.outputs.cabal-store }}'
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: "[PowerShell] Add build script path"
       if: runner.os == 'Windows'
@@ -173,7 +173,7 @@ jobs:
         cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[].id' | sort | uniq > dependencies.txt
 
     - name: Cache Cabal store
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ${{ steps.cabal-store.outputs.cabal-store }}
         key: cache-${{ env.CACHE_VERSION }}-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('dependencies.txt') }}
