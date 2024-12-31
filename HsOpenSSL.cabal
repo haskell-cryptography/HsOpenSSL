@@ -10,7 +10,7 @@ Description:
     systems and stable. You may also be interested in the @tls@ package,
     <http://hackage.haskell.org/package/tls>, which is a pure Haskell
     implementation of SSL.
-Version:       0.11.7.7
+Version:       0.11.7.9
 License:       PublicDomain
 License-File:  COPYING
 Author:        Adam Langley, Mikhail Vorozhtsov, PHO, Taru Karttunen
@@ -33,11 +33,12 @@ Tested-With:
      || ==9.6.6
      || ==9.8.1
      || ==9.10.1
-Build-Type:    Custom
-Extra-Source-Files:
+Build-Type:    Simple
+Extra-Doc-Files:
     AUTHORS
     ChangeLog
     README.md
+Extra-Source-Files:
     cbits/HsOpenSSL.h
     cbits/mutex.h
     examples/Makefile
@@ -50,7 +51,7 @@ Extra-Source-Files:
 
 Source-Repository head
     Type: git
-    Location: git://github.com/haskell-cryptography/HsOpenSSL.git
+    Location: https://github.com/haskell-cryptography/HsOpenSSL.git
 
 Flag fast-bignum
     Description:
@@ -77,10 +78,6 @@ Flag use-pkg-config
         False
     Manual:
         True
-
-Custom-setup
-    setup-depends: Cabal >= 1.12 && < 4,
-                   base  >= 4.8 && < 5
 
 Library
     Build-Depends:
