@@ -19,7 +19,7 @@ Stability:     stable
 Homepage:      https://github.com/haskell-cryptography/HsOpenSSL
 Bug-Reports:   https://github.com/haskell-cryptography/HsOpenSSL/issues
 Category:      Cryptography
-Cabal-Version: 1.12
+Cabal-Version: 1.18
 Tested-With:
     GHC ==8.0.2
      || ==8.2.2
