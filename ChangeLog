@@ -1,3 +1,10 @@
+2025-01-02  Vladimir Shabanov  <dev@vshabanov.com>
+
+	* HsOpenSSL.cabal (Version): Bump version to 0.11.7.9
+
+	* Remove Setup.hs (#101)
+	by Andreas Abel @andreasabel
+
 2024-08-19  Vladimir Shabanov  <dev@vshabanov.com>
 
 	* HsOpenSSL.cabal (Version): Bump version to 0.11.7.8
