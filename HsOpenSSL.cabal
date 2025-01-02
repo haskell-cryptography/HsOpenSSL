@@ -10,7 +10,7 @@ Description:
     systems and stable. You may also be interested in the @tls@ package,
     <http://hackage.haskell.org/package/tls>, which is a pure Haskell
     implementation of SSL.
-Version:       0.11.7.8
+Version:       0.11.7.9
 License:       PublicDomain
 License-File:  COPYING
 Author:        Adam Langley, Mikhail Vorozhtsov, PHO, Taru Karttunen
@@ -21,12 +21,24 @@ Bug-Reports:   https://github.com/haskell-cryptography/HsOpenSSL/issues
 Category:      Cryptography
 Cabal-Version: 1.12
 Tested-With:
-    GHC==8.8.1, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2, GHC==8.0.2, GHC==7.10.3
-Build-Type:    Custom
-Extra-Source-Files:
+    GHC ==8.0.2
+     || ==8.2.2
+     || ==8.4.4
+     || ==8.6.5
+     || ==8.8.4
+     || ==8.10.7
+     || ==9.0.2
+     || ==9.2.8
+     || ==9.4.8
+     || ==9.6.6
+     || ==9.8.1
+     || ==9.10.1
+Build-Type:    Simple
+Extra-Doc-Files:
     AUTHORS
     ChangeLog
     README.md
+Extra-Source-Files:
     cbits/HsOpenSSL.h
     cbits/mutex.h
     examples/Makefile
@@ -39,7 +51,7 @@ Extra-Source-Files:
 
 Source-Repository head
     Type: git
-    Location: git://github.com/haskell-cryptography/HsOpenSSL.git
+    Location: https://github.com/haskell-cryptography/HsOpenSSL.git
 
 Flag fast-bignum
     Description:
@@ -67,10 +79,6 @@ Flag use-pkg-config
     Manual:
         True
 
-Custom-setup
-    setup-depends: Cabal >= 1.12 && < 4,
-                   base  >= 4.8 && < 5
-
 Library
     Build-Depends:
         base       >= 4.8 && < 5,
@@ -88,11 +96,15 @@ Library
         Build-Depends: integer-gmp >= 1.0.0 && < 1.1.0
 
     if os(darwin) && flag(homebrew-openssl)
-        Include-Dirs: /usr/local/opt/openssl/include
-        Extra-Lib-Dirs: /usr/local/opt/openssl/lib
+        if arch(aarch64)
+            Include-Dirs:   /opt/homebrew/opt/openssl/include
+            Extra-Lib-Dirs: /opt/homebrew/opt/openssl/lib
+        else
+            Include-Dirs:   /usr/local/opt/openssl/include
+            Extra-Lib-Dirs: /usr/local/opt/openssl/lib
 
     if os(darwin) && flag(macports-openssl)
-        Include-Dirs: /opt/local/include
+        Include-Dirs:   /opt/local/include
         Extra-Lib-Dirs: /opt/local/lib
 
     if flag(use-pkg-config)
