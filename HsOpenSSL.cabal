@@ -159,7 +159,7 @@ Library
     Default-Language:
         Haskell2010
     GHC-Options:
-        -Wall
+        -Wall -optc=-Wno-discarded-qualifiers -optc=-Wno-deprecated-declarations -optc=-Wno-incompatible-pointer-types
     C-Sources:
         cbits/HsOpenSSL.c
     Include-Dirs:
