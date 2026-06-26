@@ -61,10 +61,16 @@ nid2ln nid = _nid2ln nid >>= peekCString
 
 data {-# CTYPE "openssl/asn1.h" "ASN1_STRING" #-} ASN1_STRING
 
+foreign import capi unsafe "openssl/asn1.h ASN1_STRING_get0_data"
+        _ASN1_STRING_get0_data :: Ptr ASN1_STRING -> IO (Ptr CChar)
+
+foreign import capi unsafe "openssl/asn1.h ASN1_STRING_length"
+        _ASN1_STRING_length :: Ptr ASN1_STRING -> IO CInt
+
 peekASN1String :: Ptr ASN1_STRING -> IO String
 peekASN1String strPtr
-    = do buf <- (#peek ASN1_STRING, data  ) strPtr
-         len <- (#peek ASN1_STRING, length) strPtr :: IO CInt
+    = do buf <- _ASN1_STRING_get0_data strPtr
+         len <- _ASN1_STRING_length strPtr
          peekCStringLen (buf, fromIntegral len)
 
 
