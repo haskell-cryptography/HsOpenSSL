@@ -1,3 +1,20 @@
+2026-06-29  Vladimir Shabanov  <dev@vshabanov.com>
+
+	* HsOpenSSL.cabal (Version): Bump version to 0.11.7.11
+
+	* Fix OpenSSL 4.0 compatibility (#106)
+	by Ravi Kant Sharma @raviksharma
+
+2026-01-31  Vladimir Shabanov  <dev@vshabanov.com>
+
+	* HsOpenSSL.cabal (Version): Bump version to 0.11.7.10
+
+	* Allow time-1.15; bump CI to GHC 9.14
+	by Andreas Abel @andreasabel
+
+	* Disable C warnings (#95)
+	by Erik de Castro Lopo @erikd
+
 2025-01-02  Vladimir Shabanov  <dev@vshabanov.com>
 
 	* HsOpenSSL.cabal (Version): Bump version to 0.11.7.9

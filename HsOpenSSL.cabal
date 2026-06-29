@@ -11,7 +11,7 @@ Description:
     systems and stable. You may also be interested in the @tls@ package,
     <http://hackage.haskell.org/package/tls>, which is a pure Haskell
     implementation of SSL.
-Version:       0.11.7.10
+Version:       0.11.7.11
 License:       PublicDomain
 License-File:  COPYING
 Author:        Adam Langley, Mikhail Vorozhtsov, PHO, Taru Karttunen
@@ -86,7 +86,7 @@ Library
         base       >= 4.8 && < 5,
         bytestring >= 0.9 && < 0.13,
         network    >= 2.1 && < 3.3,
-        time       >= 1.5 && < 1.16
+        time       >= 1.5 && < 1.17
 
     Build-Tools: hsc2hs >= 0.67
 
@@ -161,7 +161,13 @@ Library
     Default-Language:
         Haskell2010
     GHC-Options:
-        -Wall -optc=-Wno-discarded-qualifiers -optc=-Wno-deprecated-declarations -optc=-Wno-incompatible-pointer-types
+        -Wall
+        -Wno-deriving-typeable
+        -optc=-Wno-unknown-warning-option
+        -optc=-Wno-discarded-qualifiers
+        -optc=-Wno-deprecated-declarations
+        -optc=-Wno-incompatible-pointer-types
+        -optc=-Wno-pointer-sign
     C-Sources:
         cbits/HsOpenSSL.c
     Include-Dirs:
